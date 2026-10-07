@@ -32,7 +32,7 @@ def main():
     session.verify = str(args.ca_bundle) if args.ca_bundle else True
     if key:
         session.headers['Authorization'] = 'Bearer ' + key
-    model = 'qwen3.6-27b'
+    model = 'qwen3.6-35b-a3b'
     results = []
 
     def save(name, data):

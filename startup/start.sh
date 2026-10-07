@@ -4,9 +4,10 @@ for f in /usr/local/Ascend/ascend-toolkit/set_env.sh /usr/local/Ascend/nnal/atb/
   if [[ -f "$f" ]]; then set +u; source "$f"; set -u; fi
 done
 export PYTHONUNBUFFERED=1
-export HCCL_BUFFSIZE=512
+export HCCL_BUFFSIZE=1024
 export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True
-export OMP_NUM_THREADS=8
+export OMP_NUM_THREADS=1
+export TASK_QUEUE_ENABLE=1
 export TOKENIZERS_PARALLELISM=false
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1

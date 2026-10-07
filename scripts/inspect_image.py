@@ -15,7 +15,7 @@ spec = importlib.util.find_spec('vllm')
 registry_found = False
 if spec and spec.submodule_search_locations:
     registry = Path(next(iter(spec.submodule_search_locations))) / 'model_executor/models/registry.py'
-    registry_found = registry.is_file() and 'Qwen3_5ForConditionalGeneration' in registry.read_text()
+    registry_found = registry.is_file() and 'Qwen3_5MoeForConditionalGeneration' in registry.read_text()
 facts = {'architecture': platform.machine(), 'versions': versions,
          'qwen_architecture_in_registry': registry_found}
 print(json.dumps(facts, indent=2))

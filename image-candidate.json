@@ -7,8 +7,8 @@
   "os": "linux",
   "compressed_layers_bytes": 6698551583,
   "cann_path_in_image_metadata": "/usr/local/Ascend/cann-9.1.0",
-  "verification_scope": "Anonymous public registry index, ARM64 manifest and config metadata verified; this candidate was not used in the reference runtime acceptance",
-  "reference_runtime_manifest_digest": "sha256:26e8a40f1b7a4ed6b7242578aac79f07d6525ffad1427fa4ebd7e3ed166a6bcb",
-  "reference_public_registry_availability": "Anonymous Quay lookup returned MANIFEST_UNKNOWN on 2026-10-07; retrieve the retained validated image from its owner or use the public candidate and validate it on the target pool",
-  "operator_gate": "Confirm target pool driver compatibility and execute all acceptance tests with the exact selected image"
+  "verification_scope": "Public ARM64 registry metadata checked; official versioned recipe covers 35B-A3B on A2; proposed BF16 TP8/DP1/EP8 runtime has not been tested",
+  "operator_gate": "Confirm target pool driver compatibility and execute all acceptance tests with the exact selected image",
+  "model": "Qwen/Qwen3.6-35B-A3B",
+  "runtime_acceptance": "not executed for 35B-A3B"
 }

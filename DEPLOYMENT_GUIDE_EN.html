@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Qwen3.6 27B ModelArts Standard Deployment Guide</title><style>:root{--ink:#172a3c;--blue:#155b9c;--soft:#f4f7fb;--line:#dce5ee}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--soft);color:var(--ink);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}header{background:#122b45;color:#fff;padding:20px 32px;border-bottom:4px solid #5fb8e8}header strong{display:block;font-size:18px;letter-spacing:.02em}header span{font-size:13px;color:#cadbe9}.layout{display:grid;grid-template-columns:270px minmax(0,1040px);gap:26px;max-width:1370px;margin:28px auto;padding:0 24px}nav{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;padding:18px;background:#fff;border:1px solid var(--line);border-radius:8px}nav strong{font-size:13px;display:block;margin-bottom:12px;text-transform:uppercase;letter-spacing:.08em}nav a{display:block;font-size:13px;line-height:1.45;padding:8px 0;text-decoration:none;border-bottom:1px solid #edf2f7}a{color:var(--blue)}main{background:#fff;border:1px solid var(--line);border-radius:8px;padding:36px 44px;min-width:0}h1{font-size:32px;line-height:1.25;margin:0 0 20px}h2{font-size:24px;line-height:1.35;margin:42px 0 16px;border-top:2px solid var(--line);padding-top:22px;scroll-margin-top:24px}h3{font-size:19px;margin:26px 0 12px}p{margin:14px 0}li{margin:7px 0}table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.5;margin:20px 0;table-layout:auto}th{background:#e8f1fa;text-align:left;color:#133e67}th,td{padding:10px 12px;border:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}tr:nth-child(even) td{background:#fafcfe}code{font:13px/1.6 Consolas,monospace;background:#edf3f8;padding:2px 4px;border-radius:3px;overflow-wrap:anywhere}pre{background:#10263b;color:#eff6fd;border-radius:6px;padding:18px;overflow:auto;margin:20px 0}pre code{background:none;color:inherit;padding:0;border-radius:0;white-space:pre-wrap;overflow-wrap:anywhere}blockquote{margin:18px 0;border-left:4px solid #5ca8d9;padding:8px 18px;background:#f2f8fc}footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:#647688}@media(max-width:950px){.layout{display:block;padding:0 12px}nav{position:static;max-height:none;margin-bottom:20px}main{padding:25px 20px}h1{font-size:27px}table{font-size:12px}th,td{padding:8px}}@media print{@page{size:A4;margin:17mm}body{background:#fff;font-size:10.5pt;line-height:1.5}header,nav{display:none}.layout{display:block;max-width:none;margin:0;padding:0}main{border:0;border-radius:0;padding:0}h1{font-size:23pt}h2{font-size:16pt;break-after:avoid;margin-top:24pt;padding-top:12pt}h3{font-size:12pt;break-after:avoid}table{font-size:9pt}thead{display:table-header-group}tr{break-inside:avoid}pre{color:#172a3c;background:#f1f4f7;font-size:8.5pt;border:1px solid #dde4ea;break-inside:auto}pre code{font-size:8.5pt}a{color:#164f85;text-decoration:underline}footer{font-size:8pt}}</style></head><body><header><strong>Qwen3.6 27B deployment guide</strong><span>Huawei Cloud public cloud · ModelArts Standard · Ascend A2 · English · 7 October 2026</span></header><div class="layout"><nav aria-label="Contents"><strong>Step by step</strong><a href="#section-1">Purpose and deployment scope</a>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Qwen3.6 35B A3B ModelArts Standard Deployment Guide</title><style>:root{--ink:#172a3c;--blue:#155b9c;--soft:#f4f7fb;--line:#dce5ee}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--soft);color:var(--ink);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}header{background:#122b45;color:#fff;padding:20px 32px;border-bottom:4px solid #5fb8e8}header strong{display:block;font-size:18px;letter-spacing:.02em}header span{font-size:13px;color:#cadbe9}.layout{display:grid;grid-template-columns:270px minmax(0,1040px);gap:26px;max-width:1370px;margin:28px auto;padding:0 24px}nav{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;padding:18px;background:#fff;border:1px solid var(--line);border-radius:8px}nav strong{font-size:13px;display:block;margin-bottom:12px;text-transform:uppercase;letter-spacing:.08em}nav a{display:block;font-size:13px;line-height:1.45;padding:8px 0;text-decoration:none;border-bottom:1px solid #edf2f7}a{color:var(--blue)}main{background:#fff;border:1px solid var(--line);border-radius:8px;padding:36px 44px;min-width:0}h1{font-size:32px;line-height:1.25;margin:0 0 20px}h2{font-size:24px;line-height:1.35;margin:42px 0 16px;border-top:2px solid var(--line);padding-top:22px;scroll-margin-top:24px}h3{font-size:19px;margin:26px 0 12px}p{margin:14px 0}li{margin:7px 0}table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.5;margin:20px 0;table-layout:auto}th{background:#e8f1fa;text-align:left;color:#133e67}th,td{padding:10px 12px;border:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}tr:nth-child(even) td{background:#fafcfe}code{font:13px/1.6 Consolas,monospace;background:#edf3f8;padding:2px 4px;border-radius:3px;overflow-wrap:anywhere}pre{background:#10263b;color:#eff6fd;border-radius:6px;padding:18px;overflow:auto;margin:20px 0}pre code{background:none;color:inherit;padding:0;border-radius:0;white-space:pre-wrap;overflow-wrap:anywhere}blockquote{margin:18px 0;border-left:4px solid #5ca8d9;padding:8px 18px;background:#f2f8fc}footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:#647688}@media(max-width:950px){.layout{display:block;padding:0 12px}nav{position:static;max-height:none;margin-bottom:20px}main{padding:25px 20px}h1{font-size:27px}table{font-size:12px}th,td{padding:8px}}@media print{@page{size:A4;margin:17mm}body{background:#fff;font-size:10.5pt;line-height:1.5}header,nav{display:none}.layout{display:block;max-width:none;margin:0;padding:0}main{border:0;border-radius:0;padding:0}h1{font-size:23pt}h2{font-size:16pt;break-after:avoid;margin-top:24pt;padding-top:12pt}h3{font-size:12pt;break-after:avoid}table{font-size:9pt}thead{display:table-header-group}tr{break-inside:avoid}pre{color:#172a3c;background:#f1f4f7;font-size:8.5pt;border:1px solid #dde4ea;break-inside:auto}pre code{font-size:8.5pt}a{color:#164f85;text-decoration:underline}footer{font-size:8pt}}</style></head><body><header><strong>Qwen3.6 35B A3B deployment guide</strong><span>Huawei Cloud public cloud · ModelArts Standard · Ascend A2 · English · 7 October 2026</span></header><div class="layout"><nav aria-label="Contents"><strong>Step by step</strong><a href="#section-1">Purpose and deployment scope</a>
 <a href="#section-2">Step 1 Prepare the account and resource worksheet</a>
 <a href="#section-3">Step 2 Prepare one idle eight-card A2 node</a>
 <a href="#section-4">Step 3 Prepare model storage and runtime storage</a>
@@ -18,12 +18,13 @@
 <a href="#section-18">Step 17 Complete the handover record</a>
 <a href="#section-19">Appendix A Complete weight download addresses</a>
 <a href="#section-20">Appendix B Complete console option selection checklist</a>
-<a href="#section-21">Appendix C Complete deployment script source</a></nav><main><h1 id="deploy-qwen3.6-27b-on-huawei-cloud-modelarts-standard">Deploy Qwen3.6 27B on Huawei Cloud ModelArts Standard</h1>
+<a href="#section-21">Appendix C Complete deployment script source</a></nav><main><h1 id="deploy-qwen3.6-35b-a3b-on-huawei-cloud-modelarts-standard">Deploy Qwen3.6 35B A3B on Huawei Cloud ModelArts Standard</h1>
 <h2 id="section-1">Purpose and deployment scope</h2>
-<p>Follow this guide to deploy a non-production chatbot using official <strong>Qwen3.6-27B BF16</strong> weights, one <strong>8-card Ascend A2 node</strong>, and a <strong>262,144-token context limit</strong> on Huawei Cloud public-cloud <strong>ModelArts Standard, new-version real-time inference</strong>. The result is an authenticated OpenAI-compatible chat API. A chatbot web interface is a separate application.</p>
-<p>The runtime settings below come from a successful eight-card reference deployment. Public-cloud resource names, service URLs, storage associations, drivers, and image availability must be resolved in your own account. The public release image selected in Step 5 is available and its ARM64 digest was checked on 7 October 2026; it is different from the retained image used in the reference deployment. Complete the acceptance steps with your selected image before handing over the service.</p>
-<p>The accompanying ZIP contains the guide, executable preparation and startup files, request examples, an acceptance script, and a final checklist. Appendices A, B and C provide the complete download-address inventory, a field-by-field console selection checklist, and the full script source. It does <strong>not</strong> contain the 55.6 GB weights, container image, API keys, or account-specific configuration.</p>
-<h3 id="target-configuration">Target configuration</h3>
+<p>Follow this guide to deploy a non-production chatbot using official <strong>Qwen3.6-35B-A3B BF16</strong> weights, one <strong>8-card Ascend A2 node</strong>, and a <strong>262,144-token context limit</strong> on Huawei Cloud public-cloud <strong>ModelArts Standard, new-version real-time inference</strong>. The result is an authenticated OpenAI-compatible chat API. A chatbot web interface is a separate application.</p>
+<p>Here, <strong>A3B means approximately 3B activated parameters per token</strong>, not Ascend A3 hardware. This guide continues to target Ascend A2. Download the complete 35B MoE snapshot; the activated-parameter count does not reduce the weight inventory to 3B.</p>
+<p>This is a proposed 35B-A3B deployment profile based on the official model configuration and versioned Ascend recipe. It retains the eight-card public-cloud infrastructure workflow. The 35B-A3B model has not been deployed or runtime-tested as part of preparing this guide. Complete compatibility and functional acceptance with the selected image in your account. Earlier 27B results do not establish 35B behavior; see <a href="HISTORICAL_27B_REFERENCE.md">the historical reference note</a>.</p>
+<p>The accompanying ZIP contains the guide, executable preparation and startup files, request examples, an acceptance script, and a final checklist. Appendices A, B and C provide the complete download-address inventory, a field-by-field console selection checklist, and the full script source. It does <strong>not</strong> contain the 71.9 GB weights, container image, API keys, or account-specific configuration.</p>
+<h3 id="proposed-target-configuration">Proposed target configuration</h3>
 <table>
 <thead>
 <tr>
@@ -38,11 +39,15 @@
 </tr>
 <tr>
 <td>Model repository</td>
-<td><code>Qwen/Qwen3.6-27B</code></td>
+<td><code>Qwen/Qwen3.6-35B-A3B</code></td>
 </tr>
 <tr>
 <td>Weight revision</td>
-<td><code>6a9e13bd6fc8f0983b9b99948120bc37f49c13e9</code></td>
+<td><code>995ad96eacd98c81ed38be0c5b274b04031597b0</code></td>
+</tr>
+<tr>
+<td>Model architecture</td>
+<td>Sparse MoE, 35B total parameters and approximately 3B activated per token</td>
 </tr>
 <tr>
 <td>Weight precision</td>
@@ -50,7 +55,7 @@
 </tr>
 <tr>
 <td>Snapshot inventory</td>
-<td>29 files, 15 weight shards, 55,586,107,940 bytes</td>
+<td>40 files, 26 weight shards, 71,926,865,825 bytes</td>
 </tr>
 <tr>
 <td>Compute</td>
@@ -58,7 +63,7 @@
 </tr>
 <tr>
 <td>Engine topology</td>
-<td>TP8 / DP1, one deployment replica, one unit instance</td>
+<td>TP8 / DP1 / EP8, one deployment replica, one unit instance</td>
 </tr>
 <tr>
 <td>Context</td>
@@ -66,7 +71,7 @@
 </tr>
 <tr>
 <td>Model alias</td>
-<td><code>qwen3.6-27b</code></td>
+<td><code>qwen3.6-35b-a3b</code></td>
 </tr>
 <tr>
 <td>Container API</td>
@@ -94,7 +99,7 @@
 </tr>
 </tbody>
 </table>
-<p>The native model context is 262,144 tokens. This procedure does not apply a context extension or change RoPE settings. The weight configuration can legitimately identify the architecture as <code>Qwen3_5ForConditionalGeneration</code>: verify the repository revision rather than treating that architecture name as evidence that the wrong model was downloaded. See the <a href="https://huggingface.co/Qwen/Qwen3.6-27B">official model card</a>.</p>
+<p>The native model context is 262,144 tokens. This procedure does not apply a context extension or change RoPE settings. The weight configuration can legitimately identify the architecture as <code>Qwen3_5MoeForConditionalGeneration</code>: verify the repository revision rather than treating that architecture name as evidence that the wrong model was downloaded. See the <a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B">official model card</a>.</p>
 <h2 id="section-2">Step 1 Prepare the account and resource worksheet</h2>
 <ol>
 <li>Sign in to the Huawei Cloud console and choose the deployment region.</li>
@@ -143,7 +148,7 @@
 </tr>
 <tr>
 <td>Service name</td>
-<td><code>qwen36-27b-8a2-test</code></td>
+<td><code>qwen36-35b-a3b-8a2-test</code></td>
 </tr>
 <tr>
 <td>Deployment name</td>
@@ -168,9 +173,9 @@
 <li>Verify the hardware family, ARM64 CPU architecture, driver version, node health and schedulability.</li>
 <li>Select a node with <strong>8 available NPUs</strong>, not merely eight total NPUs. Record its actual available CPU and memory as well.</li>
 <li>Confirm compatibility between the pool driver, the selected CANN image, and A2 hardware using the image release guidance. Do not upgrade a shared pool driver as an incidental part of this procedure.</li>
-<li>Check the node's data disk and image disk capacity. The container image is separate from the local model cache. Budget for expanded image layers, approximately 55.6 GB of cached weights, graph caches and logs; also meet the local-cache disk requirements shown by ModelArts for your pool/storage option.</li>
+<li>Check the node's data disk and image disk capacity. The container image is separate from the local model cache. Budget for expanded image layers, approximately 71.9 GB of cached weights, graph caches and logs; also meet the local-cache disk requirements shown by ModelArts for your pool/storage option.</li>
 </ol>
-<p>The reference request was <strong>8 NPUs, 120 vCPUs and 900,000 MiB of RAM</strong>. These CPU and RAM values are a reproducible reference allocation, not a universal minimum for Qwen. Use them only if your selected node can allocate them. A preset eight-card shape may ask for more CPU than the node currently has available; use a permitted custom specification rather than reducing the NPU count.</p>
+<p>The proposed request is <strong>8 NPUs, 120 vCPUs and 900,000 MiB of RAM</strong>. These CPU and RAM values reuse the previous infrastructure allocation; they are not measured minimum requirements for 35B-A3B. Use them only if your selected node can allocate them. A preset eight-card shape may ask for more CPU than the node currently has available; use a permitted custom specification rather than reducing the NPU count.</p>
 <p><strong>Checkpoint:</strong> Exactly one suitable non-production node can provide the full eight-card allocation. Record its driver and available resources.</p>
 <h2 id="section-4">Step 3 Prepare model storage and runtime storage</h2>
 <p>Use two distinct file systems in the main procedure:</p>
@@ -226,12 +231,12 @@ df -h /mnt/qwen-weights /mnt/qwen-runtime
 <li>Extract this deployment package on the ECS and enter its directory.</li>
 <li>Set these variables in the same shell used for the preparation commands:</li>
 </ol>
-<pre><code class="language-bash">export QWEN_MODEL_ROOT=/mnt/qwen-weights/qwen36-27b
-export QWEN_RUNTIME_ROOT=/mnt/qwen-runtime/qwen36-27b
+<pre><code class="language-bash">export QWEN_MODEL_ROOT=/mnt/qwen-weights/qwen36-35b-a3b
+export QWEN_RUNTIME_ROOT=/mnt/qwen-runtime/qwen36-35b-a3b
 mkdir -p &quot;$QWEN_MODEL_ROOT/weights&quot; &quot;$QWEN_MODEL_ROOT/logs&quot;
 mkdir -p &quot;$QWEN_RUNTIME_ROOT/startup&quot; &quot;$QWEN_RUNTIME_ROOT/logs&quot; &quot;$QWEN_RUNTIME_ROOT/run&quot;
 </code></pre>
-<p>Provide at least 100 GiB of free model-storage space for this 55.6 GB snapshot and preparation overhead, while also meeting the cloud file system's provisioning minimum. Keep runtime storage space for retained logs. Actual SFS provisioning minima and billing depend on the selected type.</p>
+<p>Provide at least 150 GiB of free model-storage space for this 71.9 GB snapshot and preparation overhead, while also meeting the cloud file system's provisioning minimum. Keep runtime storage space for retained logs. Actual SFS provisioning minima and billing depend on the selected type.</p>
 <p><strong>Checkpoint:</strong> Both mount points are actual mounted file systems, have sufficient space, and are writable by the preparation operator. Do not download into an unmounted directory that happens to have the same name.</p>
 <h2 id="section-5">Step 4 Download and verify the official weights</h2>
 <h3 id="official-download-addresses">Official download addresses</h3>
@@ -245,19 +250,19 @@ mkdir -p &quot;$QWEN_RUNTIME_ROOT/startup&quot; &quot;$QWEN_RUNTIME_ROOT/logs&qu
 <tbody>
 <tr>
 <td>Official Hugging Face repository</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B">Qwen/Qwen3.6-27B</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B">Qwen/Qwen3.6-35B-A3B</a></td>
 </tr>
 <tr>
 <td>Exact snapshot file browser</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/tree/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9">Revision 6a9e13bd6fc8f0983b9b99948120bc37f49c13e9</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/tree/995ad96eacd98c81ed38be0c5b274b04031597b0">Revision 995ad96eacd98c81ed38be0c5b274b04031597b0</a></td>
 </tr>
 <tr>
 <td>Pinned download manifest</td>
-<td><a href="https://huggingface.co/api/models/Qwen/Qwen3.6-27B/revision/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9?blobs=true">Immutable revision metadata with file sizes and LFS hashes</a></td>
+<td><a href="https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B/revision/995ad96eacd98c81ed38be0c5b274b04031597b0?blobs=true">Immutable revision metadata with file sizes and LFS hashes</a></td>
 </tr>
 <tr>
 <td>Official ModelScope mirror</td>
-<td><a href="https://www.modelscope.cn/models/Qwen/Qwen3.6-27B">Qwen/Qwen3.6-27B</a></td>
+<td><a href="https://www.modelscope.cn/models/Qwen/Qwen3.6-35B-A3B">Qwen/Qwen3.6-35B-A3B</a></td>
 </tr>
 </tbody>
 </table>
@@ -275,7 +280,7 @@ python scripts/download_weights.py \
 </code></pre>
 <p>The downloader fixes the repository revision, checks the manifest, downloads all files, supports interrupted transfers, verifies published SHA256 values for weight shards, and records SHA256 values for the remaining files. It creates <code>weights-verified.json</code> only after successful verification.</p>
 <p>Expected final output:</p>
-<pre><code class="language-text">COMPLETE 29 55586107940
+<pre><code class="language-text">COMPLETE 40 71926865825
 </code></pre>
 <p>Confirm the receipt and configuration:</p>
 <pre><code class="language-bash">python - &quot;$QWEN_MODEL_ROOT&quot; &lt;&lt;'PY'
@@ -283,9 +288,9 @@ import json, pathlib, sys
 root = pathlib.Path(sys.argv[1])
 receipt = json.loads((root / 'weights-verified.json').read_text())
 assert receipt['complete']
-assert receipt['revision'] == '6a9e13bd6fc8f0983b9b99948120bc37f49c13e9'
-assert len(receipt['files']) == 29
-assert receipt['total_bytes'] == 55586107940
+assert receipt['revision'] == '995ad96eacd98c81ed38be0c5b274b04031597b0'
+assert len(receipt['files']) == 40
+assert receipt['total_bytes'] == 71926865825
 assert not list((root / 'weights').rglob('*.incomplete'))
 config = json.loads((root / 'weights/config.json').read_text())
 assert config['text_config']['max_position_embeddings'] == 262144
@@ -295,7 +300,7 @@ PY
 <p>If interrupted, rerun the same downloader against the same directory. Do not run two downloaders concurrently against that directory. If a hash mismatch persists, quarantine the affected file, investigate the source/network/storage, and rerun verification. A directory's existence is not proof of a complete snapshot.</p>
 <p><strong>Checkpoint:</strong> The success receipt exists, all indexed shards are present, and no incomplete files remain.</p>
 <h2 id="section-6">Step 5 Prepare an ARM64 inference image in your regional SWR</h2>
-<p>The main path uses the official A2 image <strong>vLLM-Ascend v0.23.0.post1</strong>, which is named in the <a href="https://docs.vllm.ai/projects/ascend/en/v0.23.0/tutorials/models/Qwen3.5-27B-Qwen3.6-27B.html">versioned Qwen3.6 A2 deployment tutorial</a>. Use the ARM64 image, not the <code>-a3</code>, <code>-a5</code> or <code>-310p</code> variant. The <a href="https://github.com/vllm-project/vllm-ascend/releases/tag/v0.23.0.post1">release notes</a> describe this release.</p>
+<p>The main path uses the official A2 image <strong>vLLM-Ascend v0.23.0.post1</strong>, which is named in the <a href="https://docs.vllm.ai/projects/ascend/en/v0.23.0/tutorials/models/Qwen3.6-35B-A3B.html">versioned Qwen3.6-35B-A3B A2 deployment tutorial</a>. Use the ARM64 image, not the <code>-a3</code>, <code>-a5</code> or <code>-310p</code> variant. The <a href="https://github.com/vllm-project/vllm-ascend/releases/tag/v0.23.0.post1">release notes</a> describe this release.</p>
 <h3 id="pull-the-public-image-by-its-arm64-digest">Pull the public image by its ARM64 digest</h3>
 <pre><code class="language-bash">export QWEN_SOURCE_IMAGE='quay.io/ascend/vllm-ascend@sha256:e62e85cb1bef9625cf568d0e8e2ac8e4b76f946eb6e8d9d459cfcf99565bea5d'
 docker pull --platform linux/arm64 &quot;$QWEN_SOURCE_IMAGE&quot;
@@ -328,8 +333,8 @@ docker push &quot;$QWEN_DEST_IMAGE&quot;
 <li>Open <strong>View Manifest</strong>, record the destination digest and architecture, and retain the push output. Deploy by digest if your console accepts it. Otherwise use a versioned tag and prevent that tag from being overwritten.</li>
 </ol>
 <p>The image provides the inference dependencies; mounted storage provides the weights and startup files. ModelArts starts the container and supplies devices. Do not put a nested <code>docker run</code>, <code>--privileged</code>, or manual device mounting into the ModelArts boot command. Image health endpoints and stdout logging follow <a href="https://support.huaweicloud.com/intl/en-us/inference-modelarts/inference2.0-modelarts-0003.html">Preparing an Inference Image</a>.</p>
-<h3 id="if-you-need-the-exact-reference-image">If you need the exact reference image</h3>
-<p>The successful reference runtime used manifest <code>sha256:26e8a40f1b7a4ed6b7242578aac79f07d6525ffad1427fa4ebd7e3ed166a6bcb</code>. Its historical Quay manifest was not publicly available when checked. Obtain an authorized export from the owner of the retained image, load it with <code>docker load</code>, verify ARM64 and its identity, then push it to your own SWR. Do not assume that the public release image is byte-identical to it. Do not use the reference environment's private registry address in another cloud account.</p>
+<h3 id="compatibility-and-validation-gate">Compatibility and validation gate</h3>
+<p>Use the pinned public A2 image only after confirming its driver/CANN compatibility with your selected pool. The official 35B-A3B recipe supports BF16 on eight-card A2 and expert parallelism, but its W8A8 performance example is not a BF16 acceptance result for this proposed TP8/EP8 profile. Do not substitute a retained 27B image merely because it started a different model.</p>
 <p><strong>Checkpoint:</strong> The selected ARM64 image is accessible from your pool, its dependencies match the hardware, and the exact SWR tag/digest is recorded.</p>
 <h2 id="section-7">Step 6 Stage the startup package and verification receipt</h2>
 <p>Copy only the runtime files and model verification metadata to the runtime file system:</p>
@@ -348,22 +353,22 @@ python -m py_compile &quot;$QWEN_RUNTIME_ROOT/startup/supervisor.py&quot; \
 <p>The inference container must be able to read the scripts and receipt, and write to <code>logs/</code> and <code>run/</code>. The selected public image uses the default root identity in its metadata. If your organization runs it under another permitted UID, set ownership and directory permissions for that UID before deployment; also ensure its compiler/cache locations are writable. Keep permission changes confined to the new deployment directory.</p>
 <p>Expected layout:</p>
 <pre><code class="language-text">Weight SFS root                     Runtime SFS root
-/qwen36-27b/weights/                 /qwen36-27b/startup/start.sh
-  config.json                       /qwen36-27b/startup/stop.sh
-  model.safetensors.index.json       /qwen36-27b/startup/supervisor.py
-  model-00001-of-00015...             /qwen36-27b/startup/thread_preflight.py
-  tokenizer and processor files     /qwen36-27b/weights-verified.json
-                                    /qwen36-27b/logs/
-                                    /qwen36-27b/run/
+/qwen36-35b-a3b/weights/                 /qwen36-35b-a3b/startup/start.sh
+  config.json                       /qwen36-35b-a3b/startup/stop.sh
+  model.safetensors.index.json       /qwen36-35b-a3b/startup/supervisor.py
+  model-00001-of-00026...             /qwen36-35b-a3b/startup/thread_preflight.py
+  tokenizer and processor files     /qwen36-35b-a3b/weights-verified.json
+                                    /qwen36-35b-a3b/logs/
+                                    /qwen36-35b-a3b/run/
 </code></pre>
-<p>The supervisor checks the cached model's file inventory before launching vLLM, records the actual package versions and arguments, sends logs to stdout and SFS, and forwards stop signals to the API server. PID files are isolated by Pod hostname. The thread preflight leaves the platform's security policy intact; it applies a narrow clone3 error-code compatibility rule only if a thread failure and inherited clone3 EPERM are actually observed. It was not needed by the reference runtime.</p>
+<p>The supervisor checks the cached model's file inventory before launching vLLM, records the actual package versions and arguments, sends logs to stdout and SFS, and forwards stop signals to the API server. PID files are isolated by Pod hostname. The thread preflight leaves the platform's security policy intact; it applies a narrow clone3 error-code compatibility rule only if a thread failure and inherited clone3 EPERM are actually observed. Its conditional compatibility branch was not needed by the earlier 27B runtime; requirements for 35B must be checked on the target node.</p>
 <p><strong>Checkpoint:</strong> All four startup files pass syntax checks, their checksums are saved, and the runtime receipt matches the weight snapshot.</p>
 <h2 id="section-8">Step 7 Create the real-time service</h2>
 <ol>
 <li>Open <strong>ModelArts → Model Inference → Real-Time Inference</strong>.</li>
 <li>Click <strong>Deploy</strong>.</li>
 <li>Enter the service information below.</li>
-<li>Choose the access route approved for your test clients. The reference profile uses private access. Public-cloud private access must be configured for your own VPC using the service's <strong>Intranet Access Management</strong> workflow; selecting private access alone does not establish connectivity.</li>
+<li>Choose the access route approved for your test clients. This proposed profile uses private access. Public-cloud private access must be configured for your own VPC using the service's <strong>Intranet Access Management</strong> workflow; selecting private access alone does not establish connectivity.</li>
 <li>Click <strong>Next</strong> to open deployment configuration. See the <a href="https://support.huaweicloud.com/intl/id-id/inference-modelarts/inference2.0-modelarts-0016.html">public-cloud service information workflow</a>.</li>
 </ol>
 <table>
@@ -376,11 +381,11 @@ python -m py_compile &quot;$QWEN_RUNTIME_ROOT/startup/supervisor.py&quot; \
 <tbody>
 <tr>
 <td>Service Name</td>
-<td><code>qwen36-27b-8a2-test</code></td>
+<td><code>qwen36-35b-a3b-8a2-test</code></td>
 </tr>
 <tr>
 <td>Description</td>
-<td><code>Nonproduction Qwen3.6-27B BF16 chatbot, 8 A2, 262144 context</code></td>
+<td><code>Nonproduction Qwen3.6-35B-A3B BF16 chatbot, 8 A2, 262144 context</code></td>
 </tr>
 <tr>
 <td>Service Protocol</td>
@@ -408,7 +413,7 @@ python -m py_compile &quot;$QWEN_RUNTIME_ROOT/startup/supervisor.py&quot; \
 </tr>
 <tr>
 <td>Requests Per Second Limit</td>
-<td>200 as the reference gateway cap, not a throughput claim</td>
+<td>200 as an initial gateway cap, not a throughput claim</td>
 </tr>
 <tr>
 <td>LTS Logging</td>
@@ -453,7 +458,7 @@ python -m py_compile &quot;$QWEN_RUNTIME_ROOT/startup/supervisor.py&quot; \
 </tr>
 <tr>
 <td>File System Directory</td>
-<td><code>/qwen36-27b/weights</code></td>
+<td><code>/qwen36-35b-a3b/weights</code></td>
 </tr>
 <tr>
 <td>Container Mount Path</td>
@@ -505,11 +510,11 @@ python -m py_compile &quot;$QWEN_RUNTIME_ROOT/startup/supervisor.py&quot; \
 </tr>
 <tr>
 <td>CPU</td>
-<td>120 vCPUs for the reference allocation</td>
+<td>120 vCPUs for the proposed allocation</td>
 </tr>
 <tr>
 <td>Memory</td>
-<td>900,000 MiB for the reference allocation</td>
+<td>900,000 MiB for the proposed allocation</td>
 </tr>
 <tr>
 <td>Image Type</td>
@@ -550,7 +555,7 @@ python -m py_compile &quot;$QWEN_RUNTIME_ROOT/startup/supervisor.py&quot; \
 </tr>
 <tr>
 <td>File System Directory</td>
-<td><code>/qwen36-27b</code></td>
+<td><code>/qwen36-35b-a3b</code></td>
 </tr>
 <tr>
 <td>Container Mount Path</td>
@@ -593,11 +598,12 @@ python -m py_compile &quot;$QWEN_RUNTIME_ROOT/startup/supervisor.py&quot; \
 <p>The shutdown hook requests termination from the API server and waits for the supervisor to exit. Actual draining remains bounded by the platform's grace period and the server's shutdown behavior. Verify draining in Step 15 before production use.</p>
 <h3 id="runtime-arguments-used-by-the-package">Runtime arguments used by the package</h3>
 <pre><code class="language-text">model                       /model/weights
-served-model-name           qwen3.6-27b
+served-model-name           qwen3.6-35b-a3b
 host                        0.0.0.0
 port                        8000
 tensor-parallel-size        8
 data-parallel-size          1
+expert parallelism          enabled, EP8 with TP8/DP1
 dtype                       bfloat16
 max-model-len               262144
 max-num-seqs                16
@@ -610,7 +616,7 @@ compilation graph mode      FULL_DECODE_ONLY
 MTP                         disabled in this initial profile
 quantization                none
 </code></pre>
-<p>These are the BF16 reference settings, not the official tutorial's W8A8/MTP performance recipe. Do not add <code>--quantization ascend</code> to official BF16 weights. Sixteen maximum active sequences is a scheduler setting, not proof that sixteen simultaneous 256K conversations meet a service-level target.</p>
+<p>These are proposed BF16 starting settings, not the official tutorial's W8A8 performance recipe. Expert parallelism distributes MoE experts across the eight workers, while attention remains TP8. The 3B activation count does not mean only 3B of weights must be downloaded or loaded. Do not add <code>--quantization ascend</code> to official BF16 weights. Sixteen maximum active sequences is a scheduler setting, not proof that sixteen simultaneous 256K conversations meet a service-level target.</p>
 <p><strong>Checkpoint:</strong> One unit instance requests eight NPUs, uses the correct image and mounts, and has the correct boot command, disabled rebuild and enabled shutdown settings.</p>
 <h2 id="section-11">Step 10 Configure health checks and deployment management</h2>
 <ol>
@@ -695,8 +701,8 @@ quantization                none
 <li>Correct non-production service and pool.</li>
 <li>Deployment replicas <strong>1</strong>, unit instances <strong>1</strong>, NPU count <strong>8</strong>.</li>
 <li>Correct ARM64 SWR image tag/digest.</li>
-<li>Weight SFS path <code>/qwen36-27b/weights</code> → <code>/model/weights</code>, read-only, <strong>local acceleration enabled</strong>.</li>
-<li>Runtime SFS path <code>/qwen36-27b</code> → <code>/qwen-data</code>, read/write, uncached.</li>
+<li>Weight SFS path <code>/qwen36-35b-a3b/weights</code> → <code>/model/weights</code>, read-only, <strong>local acceleration enabled</strong>.</li>
+<li>Runtime SFS path <code>/qwen36-35b-a3b</code> → <code>/qwen-data</code>, read/write, uncached.</li>
 <li>Boot command exactly <code>bash /qwen-data/startup/start.sh</code>.</li>
 <li>Automatic rebuild <strong>disabled</strong>.</li>
 <li>Graceful shutdown <strong>enabled</strong>, effective timeout saved, correct stop command.</li>
@@ -724,7 +730,7 @@ tail -n 80 &quot;$QWEN_RUNTIME_ROOT&quot;/logs/runtime-*.log
 <li>Wait until the service and deployment show <strong>Running</strong> and <strong>1/1 ready</strong>.</li>
 <li>Use <strong>Cloud Shell</strong> in the service, when available, to inspect <code>npu-smi info</code> and call <code>http://127.0.0.1:8000/health</code> inside the selected container.</li>
 </ol>
-<p>During startup, a probe can report connection refused before the server begins listening. Continue observing if loading/compilation logs are advancing and the startup window has not expired. If the process exits, a traceback occurs, or repeated OOM/HCCL errors appear, investigate instead of waiting indefinitely. The reference startup took about eight minutes; that is an observation from one environment, not an ETA for another region or image.</p>
+<p>During startup, a probe can report connection refused before the server begins listening. Continue observing if loading/compilation logs are advancing and the startup window has not expired. If the process exits, a traceback occurs, or repeated OOM/HCCL errors appear, investigate instead of waiting indefinitely. The earlier 27B model started in about eight minutes in another environment. No startup duration has been measured for this 35B profile.</p>
 <p><strong>Checkpoint:</strong> All eight worker ranks belong to the intended model, and both platform readiness and the health endpoint succeed.</p>
 <h2 id="section-14">Step 13 Configure the client route and API key</h2>
 <ol>
@@ -757,7 +763,7 @@ curl --fail-with-body --silent --show-error \
   --data-binary @examples/chat.json \
   &quot;$QWEN_SERVICE_ROOT/v1/chat/completions&quot;
 </code></pre>
-<p>Expected: the list contains <code>qwen3.6-27b</code>; the answer to the arithmetic request is <code>43</code> with a normal stop reason.</p>
+<p>Expected: the list contains <code>qwen3.6-35b-a3b</code>; the answer to the arithmetic request is <code>43</code> with a normal stop reason.</p>
 <h3 id="streaming-chat">Streaming chat</h3>
 <pre><code class="language-bash">curl --fail-with-body --silent --show-error --no-buffer \
   -H &quot;Authorization: Bearer $QWEN_MODELARTS_API_KEY&quot; \
@@ -799,7 +805,7 @@ python scripts/acceptance.py \
 </tr>
 <tr>
 <td>Devices and topology</td>
-<td>Eight ranks, TP8 / DP1</td>
+<td>Eight ranks, TP8 / DP1 / EP8</td>
 </tr>
 <tr>
 <td>Model listing</td>
@@ -835,7 +841,7 @@ python scripts/acceptance.py \
 </tr>
 </tbody>
 </table>
-<p>The reference accepted <strong>261,797 input tokens</strong> and returned the correct marker; it also passed chat, multi-turn, streaming Unicode JSON, thinking, over-context rejection and missing-key rejection. These observations apply to the recorded reference runtime. Repeat the checks in the new region and selected public image. This is functional acceptance, not a QPS, latency, concurrency or production-quality benchmark.</p>
+<p>The acceptance script targets at least 261,000 input tokens, but no 35B long-context result is claimed here. The earlier 27B long-context and chatbot tests must not be reused as evidence for 35B. Run all checks with this model and the actual public-cloud image. This is functional acceptance, not a QPS, latency, concurrency or production-quality benchmark.</p>
 <p><strong>Checkpoint:</strong> Preserve the acceptance JSON files, runtime log and selected image digest. Stop handover if a required check fails.</p>
 <h2 id="section-16">Step 15 Verify shutdown and recovery before production use</h2>
 <p>For a controlled non-production drill:</p>
@@ -848,7 +854,7 @@ python scripts/acceptance.py \
 <li>Wait for 1/1 readiness, inspect actual ranks and repeat the short chat/stream checks.</li>
 <li>Record elapsed recovery time and whether the local model cache was reused. A changed/destroyed node may need to reload the weights.</li>
 </ol>
-<p>The reference deployment was later stopped after documentation was completed, with zero running and queued requests. Its supervisor forwarded the termination signal and the API process exited with code 0. The engine log also showed an internal abort shutdown timeout of zero and force cleanup of a remaining process. A restart/recovery drill and an in-flight-request draining drill were not executed. Therefore the enabled platform grace period is not proof that every in-flight request survives the selected runtime's shutdown; validate draining separately before production use.</p>
+<p>The earlier 27B deployment was stopped with zero active requests and is separate from this guide. No 35B shutdown, request-draining or restart/recovery drill has been executed. An enabled platform grace period does not prove that the selected runtime drains in-flight requests; validate that behavior before production use.</p>
 <p>For a first deployment with no previous version, rollback means stopping the new Qwen service and retaining its evidence; no existing chatbot endpoint is switched by this procedure. For a later upgrade, retain the old immutable image, weight directory and scripts, and restore that saved version if the candidate fails acceptance. Stopping a deployment does not necessarily stop billing for its resource pool or storage.</p>
 <p><strong>Checkpoint:</strong> The operating team understands and, where required, has demonstrated shutdown, restart and rollback on the new environment.</p>
 <h2 id="section-17">Step 16 Troubleshoot by the failing layer</h2>
@@ -886,7 +892,7 @@ python scripts/acceptance.py \
 </tr>
 <tr>
 <td>Receipt or startup file missing</td>
-<td>Verify that runtime SFS <code>/qwen36-27b</code> is mounted at <code>/qwen-data</code> and the receipt was copied after verification.</td>
+<td>Verify that runtime SFS <code>/qwen36-35b-a3b</code> is mounted at <code>/qwen-data</code> and the receipt was copied after verification.</td>
 </tr>
 <tr>
 <td>Cached model inventory mismatch</td>
@@ -952,7 +958,7 @@ python scripts/acceptance.py \
 </ul>
 <p>Keep API keys and login credentials outside this record. The deployment is ready for non-production chatbot use when the required functional checks pass. Establish workload-specific concurrency and performance limits separately before production traffic.</p>
 <h2 id="section-19">Appendix A Complete weight download addresses</h2>
-<p>All addresses below refer to the same immutable official snapshot. The list contains all 29 files; 15 are model weight shards. The complete download and SHA256 verification procedure is in Step 4.</p>
+<p>All addresses refer to the fixed official 35B-A3B snapshot. There are 40 files and 26 model weight shards. Download the complete snapshot and verify it using Step 4.</p>
 <table>
 <thead>
 <tr>
@@ -965,151 +971,206 @@ python scripts/acceptance.py \
 <tr>
 <td><code>.gitattributes</code></td>
 <td style="text-align: right;">1,570</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/.gitattributes">Download</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/.gitattributes">Download</a></td>
 </tr>
 <tr>
 <td><code>LICENSE</code></td>
 <td style="text-align: right;">11,343</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/LICENSE">Download</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/LICENSE">Download</a></td>
 </tr>
 <tr>
 <td><code>README.md</code></td>
-<td style="text-align: right;">62,593</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/README.md">Download</a></td>
+<td style="text-align: right;">64,550</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/README.md">Download</a></td>
 </tr>
 <tr>
 <td><code>chat_template.jinja</code></td>
 <td style="text-align: right;">7,764</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/chat_template.jinja">Download</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/chat_template.jinja">Download</a></td>
 </tr>
 <tr>
 <td><code>config.json</code></td>
-<td style="text-align: right;">4,308</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/config.json">Download</a></td>
+<td style="text-align: right;">3,686</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/config.json">Download</a></td>
 </tr>
 <tr>
 <td><code>configuration.json</code></td>
-<td style="text-align: right;">51</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/configuration.json">Download</a></td>
+<td style="text-align: right;">58</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/configuration.json">Download</a></td>
 </tr>
 <tr>
 <td><code>generation_config.json</code></td>
 <td style="text-align: right;">202</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/generation_config.json">Download</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/generation_config.json">Download</a></td>
 </tr>
 <tr>
 <td><code>merges.txt</code></td>
 <td style="text-align: right;">3,353,259</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/merges.txt">Download</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/merges.txt">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00001-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,968,861,352</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00001-of-00015.safetensors">Download</a></td>
+<td><code>model-00001-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,996,199,712</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00001-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00002-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,921,677,136</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00002-of-00015.safetensors">Download</a></td>
+<td><code>model-00002-of-00026.safetensors</code></td>
+<td style="text-align: right;">1,284,907,696</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00002-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00003-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,921,677,128</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00003-of-00015.safetensors">Download</a></td>
+<td><code>model-00003-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,357,898,360</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00003-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00004-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,921,677,128</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00004-of-00015.safetensors">Download</a></td>
+<td><code>model-00004-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,370,808,712</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00004-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00005-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,921,677,112</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00005-of-00015.safetensors">Download</a></td>
+<td><code>model-00005-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,357,898,360</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00005-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00006-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,900,710,888</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00006-of-00015.safetensors">Download</a></td>
+<td><code>model-00006-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,959,424,904</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00006-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00007-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,994,391,976</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00007-of-00015.safetensors">Download</a></td>
+<td><code>model-00007-of-00026.safetensors</code></td>
+<td style="text-align: right;">1,096,788,232</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00007-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00008-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,879,219,776</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00008-of-00015.safetensors">Download</a></td>
+<td><code>model-00008-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,946,842,008</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00008-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00009-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,921,677,136</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00009-of-00015.safetensors">Download</a></td>
+<td><code>model-00009-of-00026.safetensors</code></td>
+<td style="text-align: right;">1,096,460,848</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00009-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00010-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,921,677,128</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00010-of-00015.safetensors">Download</a></td>
+<td><code>model-00010-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,946,841,992</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00010-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00011-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,921,677,136</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00011-of-00015.safetensors">Download</a></td>
+<td><code>model-00011-of-00026.safetensors</code></td>
+<td style="text-align: right;">1,096,460,752</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00011-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00012-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,921,677,136</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00012-of-00015.safetensors">Download</a></td>
+<td><code>model-00012-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,409,971,080</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00012-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00013-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,995,081,848</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00013-of-00015.safetensors">Download</a></td>
+<td><code>model-00013-of-00026.safetensors</code></td>
+<td style="text-align: right;">1,633,331,664</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00013-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00014-of-00015.safetensors</code></td>
-<td style="text-align: right;">3,942,652,952</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00014-of-00015.safetensors">Download</a></td>
+<td><code>model-00014-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,422,553,872</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00014-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
-<td><code>model-00015-of-00015.safetensors</code></td>
-<td style="text-align: right;">508,670,568</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00015-of-00015.safetensors">Download</a></td>
+<td><code>model-00015-of-00026.safetensors</code></td>
+<td style="text-align: right;">1,633,659,224</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00015-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00016-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,946,842,136</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00016-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00017-of-00026.safetensors</code></td>
+<td style="text-align: right;">1,096,460,608</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00017-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00018-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,946,841,992</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00018-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00019-of-00026.safetensors</code></td>
+<td style="text-align: right;">1,096,460,808</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00019-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00020-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,409,971,072</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00020-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00021-of-00026.safetensors</code></td>
+<td style="text-align: right;">1,633,331,744</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00021-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00022-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,370,808,752</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00022-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00023-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,357,898,392</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00023-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00024-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,370,808,752</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00024-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00025-of-00026.safetensors</code></td>
+<td style="text-align: right;">3,832,888,256</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00025-of-00026.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00026-of-00026.safetensors</code></td>
+<td style="text-align: right;">2,231,416,848</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model-00026-of-00026.safetensors">Download</a></td>
 </tr>
 <tr>
 <td><code>model.safetensors.index.json</code></td>
-<td style="text-align: right;">112,216</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model.safetensors.index.json">Download</a></td>
+<td style="text-align: right;">98,383</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/model.safetensors.index.json">Download</a></td>
 </tr>
 <tr>
 <td><code>preprocessor_config.json</code></td>
 <td style="text-align: right;">390</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/preprocessor_config.json">Download</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/preprocessor_config.json">Download</a></td>
 </tr>
 <tr>
 <td><code>tokenizer.json</code></td>
 <td style="text-align: right;">12,807,982</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/tokenizer.json">Download</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/tokenizer.json">Download</a></td>
 </tr>
 <tr>
 <td><code>tokenizer_config.json</code></td>
 <td style="text-align: right;">16,718</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/tokenizer_config.json">Download</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/tokenizer_config.json">Download</a></td>
 </tr>
 <tr>
 <td><code>video_preprocessor_config.json</code></td>
 <td style="text-align: right;">385</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/video_preprocessor_config.json">Download</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/video_preprocessor_config.json">Download</a></td>
 </tr>
 <tr>
 <td><code>vocab.json</code></td>
 <td style="text-align: right;">6,722,759</td>
-<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/vocab.json">Download</a></td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-35B-A3B/resolve/995ad96eacd98c81ed38be0c5b274b04031597b0/vocab.json">Download</a></td>
 </tr>
 </tbody>
 </table>
-<p><code>WEIGHT_DOWNLOAD_URLS.txt</code> contains the same complete URLs as plain text. Published weight-shard hashes are checked by the downloader; the verification receipt records SHA256 for every downloaded file.</p>
+<p><code>WEIGHT_DOWNLOAD_URLS.txt</code> contains the same complete addresses as plain text.</p>
 <h2 id="section-20">Appendix B Complete console option selection checklist</h2>
 <p>Use this checklist alongside the deployment wizard. It specifies selections for the isolated eight-card BF16 chatbot baseline, including fields that should stay blank or disabled. Labels vary slightly by region and console release. Hidden dependent controls do not need to be filled when their parent option is disabled. If your console exposes an additional mandatory field, resolve its platform requirement rather than guessing.</p>
 <h3 id="before-entering-the-deployment-wizard">Before entering the deployment wizard</h3>
@@ -1176,12 +1237,12 @@ python scripts/acceptance.py \
 <tbody>
 <tr>
 <td>Service Name</td>
-<td><code>qwen36-27b-8a2-test</code></td>
+<td><code>qwen36-35b-a3b-8a2-test</code></td>
 <td>Use a unique name if this already exists</td>
 </tr>
 <tr>
 <td>Description</td>
-<td><code>Nonproduction Qwen3.6-27B BF16 chatbot, 8 A2, 262144 context</code></td>
+<td><code>Nonproduction Qwen3.6-35B-A3B BF16 chatbot, 8 A2, 262144 context</code></td>
 <td>Plain descriptive text</td>
 </tr>
 <tr>
@@ -1298,7 +1359,7 @@ python scripts/acceptance.py \
 </tr>
 <tr>
 <td>Deployment Description</td>
-<td><code>Official BF16 Qwen3.6-27B, TP8, chatbot, native 262144 context</code></td>
+<td><code>Official BF16 Qwen3.6-35B-A3B, TP8, chatbot, native 262144 context</code></td>
 <td>Optional; do not put secrets here</td>
 </tr>
 <tr>
@@ -1328,7 +1389,7 @@ python scripts/acceptance.py \
 </tr>
 <tr>
 <td>Weight File System Directory</td>
-<td><code>/qwen36-27b/weights</code></td>
+<td><code>/qwen36-35b-a3b/weights</code></td>
 <td>Relative to file system root, not an ECS mount prefix</td>
 </tr>
 <tr>
@@ -1396,12 +1457,12 @@ python scripts/acceptance.py \
 <tr>
 <td>CPU</td>
 <td><code>120</code> vCPUs</td>
-<td>Reference allocation; must fit available CPU</td>
+<td>Proposed allocation; must fit available CPU</td>
 </tr>
 <tr>
 <td>Memory</td>
 <td><code>900000</code> MiB</td>
-<td>Reference allocation; must fit available RAM</td>
+<td>Proposed allocation; must fit available RAM</td>
 </tr>
 <tr>
 <td>Unit Instances / Replicas</td>
@@ -1482,7 +1543,7 @@ python scripts/acceptance.py \
 </tr>
 <tr>
 <td>Runtime File System Directory</td>
-<td><code>/qwen36-27b</code></td>
+<td><code>/qwen36-35b-a3b</code></td>
 <td>Contains startup, receipt, logs and run directories</td>
 </tr>
 <tr>
@@ -1823,10 +1884,10 @@ python scripts/acceptance.py \
 </tbody>
 </table>
 <h2 id="section-21">Appendix C Complete deployment script source</h2>
-<p>The following code blocks are complete copies of the distributed script files. Prefer the files from the ZIP, verify <code>SHA256SUMS</code>, and use Step 6 to stage them. The included startup and stop hooks use the portable public-cloud paths; they do not depend on a private account, registry, IP address or secret file.</p>
+<p>These are complete copies of the 35B-A3B scripts in this package. The runtime profile is proposed and requires target-pool acceptance.</p>
 <h3 id="scriptsdownload_weights.py">scripts/download_weights.py</h3>
 <pre><code class="language-python">#!/usr/bin/env python3
-&quot;&quot;&quot;Download and verify the pinned official Qwen3.6-27B snapshot.&quot;&quot;&quot;
+&quot;&quot;&quot;Download and verify the pinned official Qwen3.6-35B-A3B snapshot.&quot;&quot;&quot;
 import argparse
 import concurrent.futures
 import hashlib
@@ -1836,9 +1897,9 @@ from pathlib import Path
 import time
 import requests
 
-REPO = 'Qwen/Qwen3.6-27B'
-REVISION = '6a9e13bd6fc8f0983b9b99948120bc37f49c13e9'
-EXPECTED_BYTES = 55586107940
+REPO = 'Qwen/Qwen3.6-35B-A3B'
+REVISION = '995ad96eacd98c81ed38be0c5b274b04031597b0'
+EXPECTED_BYTES = 71926865825
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -1854,8 +1915,8 @@ def main():
     response = requests.get(f'https://huggingface.co/api/models/{REPO}/revision/{REVISION}?blobs=true', timeout=60)
     response.raise_for_status()
     manifest = response.json()
-    if manifest['sha'] != REVISION or sum(x['size'] for x in manifest['siblings']) != EXPECTED_BYTES:
-        raise RuntimeError('Pinned snapshot manifest does not match the reference inventory')
+    if manifest['sha'] != REVISION or len(manifest['siblings']) != 40 or sum(x['size'] for x in manifest['siblings']) != EXPECTED_BYTES:
+        raise RuntimeError('Pinned 35B-A3B snapshot manifest does not match its inventory')
     (root / 'weight-manifest.json').write_text(json.dumps(manifest, indent=2))
     print(f'MANIFEST {REVISION} {len(manifest[&quot;siblings&quot;])} files {EXPECTED_BYTES} bytes', flush=True)
     if args.metadata_only:
@@ -1922,6 +1983,9 @@ def main():
         raise RuntimeError('Incomplete weight index')
     if list(weights.rglob('*.incomplete')):
         raise RuntimeError('Unfinished downloads remain')
+    config = json.loads((weights / 'config.json').read_text())
+    if config['architectures'] != ['Qwen3_5MoeForConditionalGeneration'] or config['text_config']['max_position_embeddings'] != 262144:
+        raise RuntimeError('Unexpected 35B-A3B architecture or native context')
     result = {'revision': REVISION, 'files': files, 'total_bytes': sum(x['bytes'] for x in files), 'complete': True}
     temporary = root / 'weights-verified.json.tmp'
     temporary.write_text(json.dumps(result, indent=2))
@@ -1949,7 +2013,7 @@ spec = importlib.util.find_spec('vllm')
 registry_found = False
 if spec and spec.submodule_search_locations:
     registry = Path(next(iter(spec.submodule_search_locations))) / 'model_executor/models/registry.py'
-    registry_found = registry.is_file() and 'Qwen3_5ForConditionalGeneration' in registry.read_text()
+    registry_found = registry.is_file() and 'Qwen3_5MoeForConditionalGeneration' in registry.read_text()
 facts = {'architecture': platform.machine(), 'versions': versions,
          'qwen_architecture_in_registry': registry_found}
 print(json.dumps(facts, indent=2))
@@ -1963,9 +2027,10 @@ for f in /usr/local/Ascend/ascend-toolkit/set_env.sh /usr/local/Ascend/nnal/atb/
   if [[ -f &quot;$f&quot; ]]; then set +u; source &quot;$f&quot;; set -u; fi
 done
 export PYTHONUNBUFFERED=1
-export HCCL_BUFFSIZE=512
+export HCCL_BUFFSIZE=1024
 export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True
-export OMP_NUM_THREADS=8
+export OMP_NUM_THREADS=1
+export TASK_QUEUE_ENABLE=1
 export TOKENIZERS_PARALLELISM=false
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
@@ -1989,12 +2054,15 @@ HOST = os.uname().nodename
 RUN = ROOT / 'run' / HOST
 RUN.mkdir(parents=True, exist_ok=True)
 verified = json.loads((ROOT / 'weights-verified.json').read_text())
-if not verified.get('complete') or verified['revision'] != '6a9e13bd6fc8f0983b9b99948120bc37f49c13e9':
+if not verified.get('complete') or verified['revision'] != '995ad96eacd98c81ed38be0c5b274b04031597b0':
     raise RuntimeError('Pinned snapshot verification receipt is missing or invalid')
 for item in verified['files']:
     path = Path('/model/weights') / item['file']
     if not path.is_file() or path.stat().st_size != item['bytes']:
         raise RuntimeError(f'Cached weight inventory mismatch: {path}')
+model_config = json.loads(Path('/model/weights/config.json').read_text())
+if model_config['architectures'] != ['Qwen3_5MoeForConditionalGeneration']:
+    raise RuntimeError('Expected the 35B-A3B MoE model architecture')
 stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 log = (ROOT / 'logs' / f'runtime-{stamp}-{HOST}.log').open('a', buffering=1)
 def emit(line):
@@ -2002,9 +2070,9 @@ def emit(line):
     log.write(line)
     log.flush()
 args = [sys.executable, '-m', 'vllm.entrypoints.openai.api_server',
-        '--model', '/model/weights', '--served-model-name', 'qwen3.6-27b',
+        '--model', '/model/weights', '--served-model-name', 'qwen3.6-35b-a3b',
         '--host', '0.0.0.0', '--port', '8000', '--tensor-parallel-size', '8',
-        '--data-parallel-size', '1', '--dtype', 'bfloat16', '--max-model-len', '262144',
+        '--data-parallel-size', '1', '--enable-expert-parallel', '--dtype', 'bfloat16', '--max-model-len', '262144',
         '--max-num-seqs', '16', '--max-num-batched-tokens', '8192',
         '--gpu-memory-utilization', '0.90', '--no-enable-prefix-caching',
         '--reasoning-parser', 'qwen3', '--seed', '1024',
@@ -2018,6 +2086,7 @@ for name in ['vllm', 'vllm-ascend', 'torch', 'torch-npu', 'transformers']:
 facts = {'started_utc': stamp, 'args': args, 'versions': versions, 'hostname': HOST,
          'pod_ip': os.environ.get('POD_IP'), 'required_context': 262144,
          'required_npus': 8, 'quantization': None, 'mtp': False,
+         'expected_architecture': 'Qwen3_5MoeForConditionalGeneration', 'expert_parallel_size': 8,
          'thread_preflight': ensure_threads()}
 (RUN / f'launch-{stamp}.json').write_text(json.dumps(facts, indent=2))
 emit(json.dumps(facts) + '\n')
@@ -2134,7 +2203,7 @@ def main():
     session.verify = str(args.ca_bundle) if args.ca_bundle else True
     if key:
         session.headers['Authorization'] = 'Bearer ' + key
-    model = 'qwen3.6-27b'
+    model = 'qwen3.6-35b-a3b'
     results = []
 
     def save(name, data):

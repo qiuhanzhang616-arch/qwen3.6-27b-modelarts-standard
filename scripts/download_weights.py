@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download and verify the pinned official Qwen3.6-27B snapshot."""
+"""Download and verify the pinned official Qwen3.6-35B-A3B snapshot."""
 import argparse
 import concurrent.futures
 import hashlib
@@ -9,9 +9,9 @@ from pathlib import Path
 import time
 import requests
 
-REPO = 'Qwen/Qwen3.6-27B'
-REVISION = '6a9e13bd6fc8f0983b9b99948120bc37f49c13e9'
-EXPECTED_BYTES = 55586107940
+REPO = 'Qwen/Qwen3.6-35B-A3B'
+REVISION = '995ad96eacd98c81ed38be0c5b274b04031597b0'
+EXPECTED_BYTES = 71926865825
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -27,8 +27,8 @@ def main():
     response = requests.get(f'https://huggingface.co/api/models/{REPO}/revision/{REVISION}?blobs=true', timeout=60)
     response.raise_for_status()
     manifest = response.json()
-    if manifest['sha'] != REVISION or sum(x['size'] for x in manifest['siblings']) != EXPECTED_BYTES:
-        raise RuntimeError('Pinned snapshot manifest does not match the reference inventory')
+    if manifest['sha'] != REVISION or len(manifest['siblings']) != 40 or sum(x['size'] for x in manifest['siblings']) != EXPECTED_BYTES:
+        raise RuntimeError('Pinned 35B-A3B snapshot manifest does not match its inventory')
     (root / 'weight-manifest.json').write_text(json.dumps(manifest, indent=2))
     print(f'MANIFEST {REVISION} {len(manifest["siblings"])} files {EXPECTED_BYTES} bytes', flush=True)
     if args.metadata_only:
@@ -95,6 +95,9 @@ def main():
         raise RuntimeError('Incomplete weight index')
     if list(weights.rglob('*.incomplete')):
         raise RuntimeError('Unfinished downloads remain')
+    config = json.loads((weights / 'config.json').read_text())
+    if config['architectures'] != ['Qwen3_5MoeForConditionalGeneration'] or config['text_config']['max_position_embeddings'] != 262144:
+        raise RuntimeError('Unexpected 35B-A3B architecture or native context')
     result = {'revision': REVISION, 'files': files, 'total_bytes': sum(x['bytes'] for x in files), 'complete': True}
     temporary = root / 'weights-verified.json.tmp'
     temporary.write_text(json.dumps(result, indent=2))
