@@ -5,9 +5,13 @@ Follow the steps in order and complete FINAL_CHECKLIST.md.
 
 Package contents
 - English guide with 17 deployment steps, full console option checklist,
-  40 direct fixed-revision download URLs, and 7 complete script listings.
+  40 direct fixed-revision download URLs, and 9 complete script listings.
 - Pinned official-weight downloader with SHA256 verification and resume support.
 - ModelArts-native startup supervisor, conditional thread preflight and stop hook.
+- MODELARTS_STARTUP_EN.md and MODELARTS_CONSOLE_VALUES.json describe the exact
+  platform mounts, foreground entry, health probes and shutdown budgets.
+- Container preflight checks the real allocation; synthetic lifecycle tests
+  cover cancellation, duplicate signals and stale/reused process IDs.
 - Public-image metadata inspection helper and recorded ARM64 candidate digest.
 - Authenticated chat, streaming, thinking and optional 256K acceptance checks.
 - Sample request bodies and handover checklist.
@@ -28,6 +32,7 @@ From the extracted package directory on Linux, run:
 Content and script validation
 - Python syntax checks passed.
 - Bash syntax checks passed.
+- Thirteen synthetic ModelArts lifecycle tests passed; no NPU engine was started.
 - Downloader metadata check returned the pinned 40-file, 71,926,865,825-byte snapshot.
 - Public registry ARM64 manifest/config were reachable when checked.
 - HTML was checked structurally; browser rendering was not verified because the

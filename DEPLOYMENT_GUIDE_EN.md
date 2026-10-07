@@ -242,7 +242,7 @@ Copy only the runtime files and model verification metadata to the runtime file 
 
 ```bash
 cp startup/start.sh startup/stop.sh startup/supervisor.py \
-  startup/thread_preflight.py "$QWEN_RUNTIME_ROOT/startup/"
+  startup/preflight.py startup/stop.py startup/thread_preflight.py "$QWEN_RUNTIME_ROOT/startup/"
 cp "$QWEN_MODEL_ROOT/weights-verified.json" "$QWEN_RUNTIME_ROOT/weights-verified.json"
 cp "$QWEN_MODEL_ROOT/weight-manifest.json" "$QWEN_RUNTIME_ROOT/weight-manifest.json"
 cp scripts/acceptance.py "$QWEN_RUNTIME_ROOT/acceptance.py"
@@ -250,8 +250,9 @@ chmod 0755 "$QWEN_RUNTIME_ROOT/startup/start.sh" "$QWEN_RUNTIME_ROOT/startup/sto
 bash -n "$QWEN_RUNTIME_ROOT/startup/start.sh"
 bash -n "$QWEN_RUNTIME_ROOT/startup/stop.sh"
 python -m py_compile "$QWEN_RUNTIME_ROOT/startup/supervisor.py" \
-  "$QWEN_RUNTIME_ROOT/startup/thread_preflight.py"
-(cd "$QWEN_RUNTIME_ROOT/startup" && sha256sum start.sh stop.sh supervisor.py thread_preflight.py > SHA256SUMS)
+  "$QWEN_RUNTIME_ROOT/startup/thread_preflight.py" \
+  "$QWEN_RUNTIME_ROOT/startup/preflight.py" "$QWEN_RUNTIME_ROOT/startup/stop.py"
+(cd "$QWEN_RUNTIME_ROOT/startup" && sha256sum *.sh *.py > SHA256SUMS)
 ```
 
 The inference container must be able to read the scripts and receipt, and write to `logs/` and `run/`. The selected public image uses the default root identity in its metadata. If your organization runs it under another permitted UID, set ownership and directory permissions for that UID before deployment; also ensure its compiler/cache locations are writable. Keep permission changes confined to the new deployment directory.
@@ -269,9 +270,9 @@ Weight SFS root                     Runtime SFS root
                                     /qwen36-35b-a3b/run/
 ```
 
-The supervisor checks the cached model's file inventory before launching vLLM, records the actual package versions and arguments, sends logs to stdout and SFS, and forwards stop signals to the API server. PID files are isolated by Pod hostname. The thread preflight leaves the platform's security policy intact; it applies a narrow clone3 error-code compatibility rule only if a thread failure and inherited clone3 EPERM are actually observed. Its conditional compatibility branch was not needed by the earlier 27B runtime; requirements for 35B must be checked on the target node.
+The supervisor checks the mounted snapshot and exactly eight visible allocated NPUs before launching vLLM, records the actual package versions and arguments, sends logs to stdout and SFS, and forwards stop signals to the API server. PID files are isolated by Pod hostname. The thread preflight leaves the platform's security policy intact; it applies a narrow clone3 error-code compatibility rule only if a thread failure and inherited clone3 EPERM are actually observed. Its conditional compatibility branch was not needed by the earlier 27B runtime; requirements for 35B must be checked on the target node.
 
-**Checkpoint:** All four startup files pass syntax checks, their checksums are saved, and the runtime receipt matches the weight snapshot.
+**Checkpoint:** All six startup files pass syntax checks, their checksums are saved, and the runtime receipt matches the weight snapshot.
 
 ## Step 7 Create the real-time service
 
@@ -380,7 +381,7 @@ bash /qwen-data/startup/stop.sh
 9. Enable **Affinity Scheduling → Node Affinity → Strong Affinity**.
 10. Select your approved idle eight-card node. If the dialog uses an **Add Node** action, add the selected row and verify the selected-node count is **1** before confirming.
 
-The shutdown hook requests termination from the API server and waits for the supervisor to exit. Actual draining remains bounded by the platform's grace period and the server's shutdown behavior. Verify draining in Step 15 before production use.
+The pre-stop hook verifies the supervisor PID and process-start time, requests termination, and waits for at most 1150 seconds. The engine receives --shutdown-timeout 1080 within the 1200-second platform grace. Read MODELARTS_STARTUP_EN.md for the lifecycle contract and verify actual request draining in Step 15.
 
 ### Runtime arguments used by the package
 
@@ -401,6 +402,7 @@ reasoning-parser            qwen3
 seed                        1024
 prefix caching              disabled
 compilation graph mode      FULL_DECODE_ONLY
+engine shutdown timeout     1080 seconds (inside the 1200-second platform grace)
 MTP                         disabled in this initial profile
 quantization                none
 ```
@@ -1020,82 +1022,256 @@ export TOKENIZERS_PARALLELISM=false
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export OTEL_SDK_DISABLED=true
-exec python /qwen-data/startup/supervisor.py
+runtime_dir="${QWEN_RUNTIME_DIR:-/qwen-data}"
+python_bin="${QWEN_PYTHON_BIN:-python}"
+command -v "$python_bin" >/dev/null
+if [[ ! -f "$runtime_dir/startup/supervisor.py" ]]; then
+  echo 'ModelArts runtime mount or startup package is missing' >&2
+  exit 1
+fi
+exec "$python_bin" "$runtime_dir/startup/supervisor.py"
+```
+
+### startup/preflight.py
+
+```python
+"""Validate mounted ModelArts artifacts and the allocated NPU visibility."""
+import importlib.metadata
+import json
+import os
+from pathlib import Path
+import platform
+import socket
+import subprocess
+import sys
+
+REVISION = '995ad96eacd98c81ed38be0c5b274b04031597b0'
+ARCHITECTURE = 'Qwen3_5MoeForConditionalGeneration'
+FILE_COUNT = 40
+TOTAL_BYTES = 71926865825
+
+def runtime_paths(environment=None, hostname=None):
+    env = os.environ if environment is None else environment
+    host = hostname or socket.gethostname()
+    if not host or any(c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-' for c in host):
+        raise RuntimeError('Unsafe Pod hostname')
+    root = Path(env.get('QWEN_RUNTIME_DIR', '/qwen-data'))
+    model = Path(env.get('QWEN_MODEL_DIR', '/model/weights'))
+    if not root.is_absolute() or not model.is_absolute():
+        raise RuntimeError('Container mount paths must be absolute')
+    root, model = root.resolve(), model.resolve()
+    return root, model, root / 'run' / host, root / 'logs', host
+
+def validate_model(model, receipt_path):
+    receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+    files = receipt.get('files', [])
+    if receipt.get('complete') is not True or receipt.get('revision') != REVISION:
+        raise RuntimeError('Mounted verification receipt is incomplete or for another revision')
+    if len(files) != FILE_COUNT or receipt.get('total_bytes') != TOTAL_BYTES:
+        raise RuntimeError('Wrong 35B snapshot inventory')
+    names = [item['file'] for item in files]
+    if len(set(names)) != FILE_COUNT or sum(item['bytes'] for item in files) != TOTAL_BYTES:
+        raise RuntimeError('Duplicate files or inconsistent receipt sizes')
+    for item in files:
+        path = (model / item['file']).resolve()
+        if not path.is_relative_to(model.resolve()):
+            raise RuntimeError('Receipt path escapes the model mount')
+        if not path.is_file() or path.stat().st_size != item['bytes']:
+            raise RuntimeError(f'Mounted model file missing or wrong size: {item["file"]}')
+    if list(model.rglob('*.incomplete')):
+        raise RuntimeError('Incomplete files remain in the mounted model')
+    config = json.loads((model / 'config.json').read_text(encoding='utf-8'))
+    if config.get('architectures') != [ARCHITECTURE]:
+        raise RuntimeError('Expected official 35B-A3B MoE architecture')
+    text = config['text_config']
+    if text.get('max_position_embeddings') != 262144 or text.get('dtype') != 'bfloat16':
+        raise RuntimeError('Unexpected native context or weight precision')
+    index = json.loads((model / 'model.safetensors.index.json').read_text(encoding='utf-8'))
+    shards = set(index['weight_map'].values())
+    if len(shards) != 26 or not shards.issubset(set(names)):
+        raise RuntimeError('Weight index does not reference the expected 26 shards')
+    return {'revision': REVISION, 'files': FILE_COUNT, 'bytes': TOTAL_BYTES,
+            'architecture': ARCHITECTURE, 'dtype': 'bfloat16', 'native_context': 262144}
+
+def package_versions():
+    return {name: importlib.metadata.version(name) for name in
+            ('vllm', 'vllm-ascend', 'torch', 'torch-npu', 'transformers')}
+
+def visible_devices():
+    if platform.system() != 'Linux' or platform.machine() not in ('aarch64', 'arm64'):
+        raise RuntimeError('This profile requires a Linux ARM64 A2 inference container')
+    probe = ('import json,torch,torch_npu; '
+             'print("MODELARTS_NPU_FACTS="+json.dumps({"available":torch.npu.is_available(),'
+             '"count":torch.npu.device_count()}))')
+    result = subprocess.run([sys.executable, '-c', probe], text=True, capture_output=True, timeout=120)
+    if result.returncode:
+        raise RuntimeError('NPU runtime import/probe failed: ' + result.stderr[-1500:])
+    lines = [line for line in result.stdout.splitlines() if line.startswith('MODELARTS_NPU_FACTS=')]
+    if len(lines) != 1:
+        raise RuntimeError('NPU probe did not return an unambiguous inventory')
+    facts = json.loads(lines[0].split('=', 1)[1])
+    if not facts['available'] or facts['count'] != 8:
+        raise RuntimeError(f'Expected exactly 8 allocated visible NPUs; got {facts}')
+    return facts
 ```
 
 ### startup/supervisor.py
 
 ```python
-"""ModelArts-native vLLM process and stdout/file log supervisor."""
+"""Run vLLM directly inside a ModelArts Standard inference container."""
 import datetime
-import importlib.metadata
 import json
 import os
 from pathlib import Path
 import signal
 import subprocess
 import sys
+from preflight import ARCHITECTURE, package_versions, runtime_paths, validate_model, visible_devices
 from thread_preflight import ensure_threads
 
-ROOT = Path('/qwen-data')
-HOST = os.uname().nodename
-RUN = ROOT / 'run' / HOST
-RUN.mkdir(parents=True, exist_ok=True)
-verified = json.loads((ROOT / 'weights-verified.json').read_text())
-if not verified.get('complete') or verified['revision'] != '995ad96eacd98c81ed38be0c5b274b04031597b0':
-    raise RuntimeError('Pinned snapshot verification receipt is missing or invalid')
-for item in verified['files']:
-    path = Path('/model/weights') / item['file']
-    if not path.is_file() or path.stat().st_size != item['bytes']:
-        raise RuntimeError(f'Cached weight inventory mismatch: {path}')
-model_config = json.loads(Path('/model/weights/config.json').read_text())
-if model_config['architectures'] != ['Qwen3_5MoeForConditionalGeneration']:
-    raise RuntimeError('Expected the 35B-A3B MoE model architecture')
-stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-log = (ROOT / 'logs' / f'runtime-{stamp}-{HOST}.log').open('a', buffering=1)
-def emit(line):
-    print(line, end='', flush=True)
-    log.write(line)
-    log.flush()
-args = [sys.executable, '-m', 'vllm.entrypoints.openai.api_server',
-        '--model', '/model/weights', '--served-model-name', 'qwen3.6-35b-a3b',
-        '--host', '0.0.0.0', '--port', '8000', '--tensor-parallel-size', '8',
-        '--data-parallel-size', '1', '--enable-expert-parallel', '--dtype', 'bfloat16', '--max-model-len', '262144',
-        '--max-num-seqs', '16', '--max-num-batched-tokens', '8192',
-        '--gpu-memory-utilization', '0.90', '--no-enable-prefix-caching',
-        '--reasoning-parser', 'qwen3', '--seed', '1024',
-        '--compilation-config', '{"cudagraph_mode":"FULL_DECODE_ONLY"}']
-versions = {}
-for name in ['vllm', 'vllm-ascend', 'torch', 'torch-npu', 'transformers']:
-    try:
-        versions[name] = importlib.metadata.version(name)
-    except importlib.metadata.PackageNotFoundError:
-        versions[name] = 'missing'
-facts = {'started_utc': stamp, 'args': args, 'versions': versions, 'hostname': HOST,
-         'pod_ip': os.environ.get('POD_IP'), 'required_context': 262144,
-         'required_npus': 8, 'quantization': None, 'mtp': False,
-         'expected_architecture': 'Qwen3_5MoeForConditionalGeneration', 'expert_parallel_size': 8,
-         'thread_preflight': ensure_threads()}
-(RUN / f'launch-{stamp}.json').write_text(json.dumps(facts, indent=2))
-emit(json.dumps(facts) + '\n')
-(RUN / 'supervisor.pid').write_text(str(os.getpid()))
-subprocess.run(['npu-smi', 'info'], stdout=log, stderr=log, check=False)
-child = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         text=True, bufsize=1, start_new_session=True)
-(RUN / 'engine-parent.pid').write_text(str(child.pid))
-def forward(signum, frame):
-    emit(f'SHUTDOWN forwarding signal {signum} to API server {child.pid}\n')
-    try:
-        child.send_signal(signum)
-    except ProcessLookupError:
-        pass
-signal.signal(signal.SIGTERM, forward)
-signal.signal(signal.SIGINT, forward)
-for line in child.stdout:
-    emit(line)
-code = child.wait()
-emit(f'ENGINE_EXIT {code}\n')
-sys.exit(code)
+ENGINE_SHUTDOWN_SECONDS = 1080
+PLATFORM_GRACE_SECONDS = 1200
+
+def process_start_ticks(pid, proc_root=Path('/proc')):
+    return (proc_root / str(pid) / 'stat').read_text().rsplit(') ', 1)[1].split()[19]
+
+def write_state(path, state):
+    temporary = path.with_suffix('.tmp')
+    temporary.write_text(json.dumps(state, indent=2), encoding='utf-8')
+    os.replace(temporary, path)
+
+def engine_arguments(model):
+    return [sys.executable, '-m', 'vllm.entrypoints.openai.api_server',
+            '--model', str(model), '--served-model-name', 'qwen3.6-35b-a3b',
+            '--host', '0.0.0.0', '--port', '8000', '--tensor-parallel-size', '8',
+            '--data-parallel-size', '1', '--enable-expert-parallel', '--dtype', 'bfloat16',
+            '--max-model-len', '262144', '--max-num-seqs', '16',
+            '--max-num-batched-tokens', '8192', '--gpu-memory-utilization', '0.90',
+            '--no-enable-prefix-caching', '--reasoning-parser', 'qwen3', '--seed', '1024',
+            '--shutdown-timeout', str(ENGINE_SHUTDOWN_SECONDS),
+            '--compilation-config', '{"cudagraph_mode":"FULL_DECODE_ONLY"}']
+
+class Lifecycle:
+    def __init__(self, emit, persist):
+        self.emit, self.persist = emit, persist
+        self.child = None
+        self.stop_requested = False
+        self.stop_signal = signal.SIGTERM
+        self.stop_notice_written = False
+
+    def terminate(self, signum, frame):
+        if self.stop_requested:
+            return
+        self.stop_requested = True
+        self.stop_signal = signum
+        # No file/log writes in a signal handler: it may interrupt those same writes.
+        if self.child is not None:
+            self.send(signum)
+
+    def flush_stop_notice(self):
+        if self.stop_requested and not self.stop_notice_written:
+            self.persist('stopping')
+            target = f'API server {self.child.pid}' if self.child is not None else 'preflight (launch cancelled)'
+            self.emit(f'SHUTDOWN signal {self.stop_signal}, target {target}\n')
+            self.stop_notice_written = True
+
+    def send(self, signum):
+        try:
+            self.child.send_signal(signum)
+        except ProcessLookupError:
+            pass
+
+    def attach(self, child):
+        self.child = child
+        if self.stop_requested:
+            self.send(self.stop_signal)
+
+def main():
+    import fcntl  # ModelArts is Linux; import here so pure helpers can be tested elsewhere.
+    root, model, run, logs, host = runtime_paths()
+    if not root.is_dir() or not model.is_dir():
+        raise RuntimeError('ModelArts model/runtime mounts are missing; configure console mounts first')
+    run.mkdir(parents=True, exist_ok=True)
+    logs.mkdir(parents=True, exist_ok=True)
+    lock = (run / '.supervisor.lock').open('a')
+    fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    state_path = run / 'supervisor-state.json'
+    state = {'pid': os.getpid(), 'start_ticks': process_start_ticks(os.getpid()),
+             'script': str(Path(__file__).resolve()), 'hostname': host,
+             'started_utc': stamp, 'engine_shutdown_seconds': ENGINE_SHUTDOWN_SECONDS,
+             'expected_platform_grace_seconds': PLATFORM_GRACE_SECONDS}
+    with (logs / f'runtime-{stamp}-{host}.log').open('a', buffering=1, encoding='utf-8') as log:
+        def emit(line):
+            print(line, end='', flush=True)
+            try:
+                log.write(line)
+                log.flush()
+            except OSError as error:
+                print(f'Runtime file log unavailable: {error}; stdout continues', file=sys.stderr, flush=True)
+
+        def persist(phase):
+            state['phase'] = phase
+            write_state(state_path, state)
+
+        lifecycle = Lifecycle(emit, persist)
+        previous = {sig: signal.signal(sig, lifecycle.terminate) for sig in (signal.SIGTERM, signal.SIGINT)}
+        code = 1
+        try:
+            persist('preflight')
+            facts = {'model': validate_model(model, root / 'weights-verified.json')}
+            if lifecycle.stop_requested:
+                lifecycle.flush_stop_notice()
+                code = 143
+                return code
+            facts.update(thread_preflight=ensure_threads(), versions=package_versions())
+            if lifecycle.stop_requested:
+                lifecycle.flush_stop_notice()
+                code = 143
+                return code
+            facts.update(devices=visible_devices(), hostname=host, pod_ip=os.environ.get('POD_IP'),
+                         model_mount=str(model), runtime_mount=str(root), tp=8, dp=1, ep=8,
+                         expected_architecture=ARCHITECTURE,
+                         engine_shutdown_seconds=ENGINE_SHUTDOWN_SECONDS,
+                         platform_settings='Verify in ModelArts console; container cannot change them')
+            if lifecycle.stop_requested:
+                lifecycle.flush_stop_notice()
+                code = 143
+                return code
+            args = engine_arguments(model)
+            facts['args'] = args
+            (run / f'launch-{stamp}.json').write_text(json.dumps(facts, indent=2), encoding='utf-8')
+            emit(json.dumps(facts) + '\n')
+            child = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                     text=True, encoding='utf-8', errors='replace', bufsize=1,
+                                     start_new_session=True)
+            lifecycle.attach(child)
+            state['engine_pid'] = child.pid
+            persist('stopping' if lifecycle.stop_requested else 'engine_started')
+            for line in child.stdout:
+                lifecycle.flush_stop_notice()
+                emit(line)
+            lifecycle.flush_stop_notice()
+            child_code = child.wait()
+            code = child_code if child_code >= 0 else 128 - child_code
+            emit(f'ENGINE_EXIT {child_code}\n')
+            return code
+        except Exception as error:
+            emit(f'BOOT_ERROR {type(error).__name__}: {error}\n')
+            raise
+        finally:
+            if lifecycle.child is not None and lifecycle.child.poll() is None:
+                lifecycle.child.terminate()
+                lifecycle.child.wait(timeout=ENGINE_SHUTDOWN_SECONDS + 30)
+            state['exit_code'] = code
+            persist('exited')
+            for sig, handler in previous.items():
+                signal.signal(sig, handler)
+            fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+            lock.close()
+
+if __name__ == '__main__':
+    sys.exit(main())
 ```
 
 ### startup/thread_preflight.py
@@ -1150,17 +1326,62 @@ def ensure_threads():
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
-pidfile="/qwen-data/run/$(hostname)/supervisor.pid"
-if [[ ! -f "$pidfile" ]]; then exit 0; fi
-pid=$(cat "$pidfile")
-if ! [[ "$pid" =~ ^[0-9]+$ ]]; then echo 'Invalid supervisor PID' >&2; exit 1; fi
-if ! kill -0 "$pid" 2>/dev/null; then exit 0; fi
-if ! tr '\0' ' ' < "/proc/$pid/cmdline" | grep -Fq '/qwen-data/startup/supervisor.py'; then
-  echo 'PID does not refer to this deployment supervisor; stop hook refused' >&2
-  exit 1
-fi
-kill -TERM "$pid"
-while kill -0 "$pid" 2>/dev/null; do sleep 1; done
+runtime_dir="${QWEN_RUNTIME_DIR:-/qwen-data}"
+exec "${QWEN_PYTHON_BIN:-python}" "$runtime_dir/startup/stop.py"
+```
+
+### startup/stop.py
+
+```python
+"""ModelArts pre-stop hook; verify PID identity and stay within platform grace."""
+import json
+import os
+from pathlib import Path
+import signal
+import time
+from preflight import runtime_paths
+
+HOOK_TIMEOUT_SECONDS = 1150
+
+def same_process(state, proc_root=Path('/proc')):
+    pid = state.get('pid')
+    if not isinstance(pid, int) or pid <= 0:
+        return False
+    try:
+        directory = proc_root / str(pid)
+        ticks = (directory / 'stat').read_text().rsplit(') ', 1)[1].split()[19]
+        arguments = (directory / 'cmdline').read_bytes().split(b'\0')
+        return ticks == str(state['start_ticks']) and os.fsencode(state['script']) in arguments
+    except (FileNotFoundError, ProcessLookupError):
+        return False
+
+def main():
+    _, _, run, _, _ = runtime_paths()
+    path = run / 'supervisor-state.json'
+    if not path.exists():
+        print('STOP: no supervisor state yet', flush=True)
+        return 0
+    state = json.loads(path.read_text(encoding='utf-8'))
+    if state.get('script') != str(Path(__file__).with_name('supervisor.py').resolve()):
+        raise RuntimeError('Stop state does not identify this deployment supervisor')
+    if state.get('phase') == 'exited' or not same_process(state):
+        print('STOP: supervisor exited or Pod state is stale', flush=True)
+        return 0
+    try:
+        os.kill(state['pid'], signal.SIGTERM)
+    except ProcessLookupError:
+        return 0
+    deadline = time.monotonic() + HOOK_TIMEOUT_SECONDS
+    while same_process(state):
+        if time.monotonic() >= deadline:
+            print('STOP: hook deadline reached; ModelArts controls remaining termination', flush=True)
+            return 124
+        time.sleep(1)
+    print('STOP: verified supervisor exited', flush=True)
+    return 0
+
+if __name__ == '__main__':
+    raise SystemExit(main())
 ```
 
 ### scripts/acceptance.py

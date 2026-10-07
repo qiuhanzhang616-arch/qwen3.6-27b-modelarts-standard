@@ -12,4 +12,11 @@ export TOKENIZERS_PARALLELISM=false
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export OTEL_SDK_DISABLED=true
-exec python /qwen-data/startup/supervisor.py
+runtime_dir="${QWEN_RUNTIME_DIR:-/qwen-data}"
+python_bin="${QWEN_PYTHON_BIN:-python}"
+command -v "$python_bin" >/dev/null
+if [[ ! -f "$runtime_dir/startup/supervisor.py" ]]; then
+  echo 'ModelArts runtime mount or startup package is missing' >&2
+  exit 1
+fi
+exec "$python_bin" "$runtime_dir/startup/supervisor.py"

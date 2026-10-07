@@ -1,0 +1,22 @@
+{
+  "purpose": "Human-readable console field reference, not an importable ModelArts API payload",
+  "model": "Qwen/Qwen3.6-35B-A3B",
+  "deployment_mode": "Basic Mode",
+  "deployment_replicas": 1,
+  "unit_instances": 1,
+  "npu_cards_per_instance": 8,
+  "container_protocol": "HTTP",
+  "container_port": 8000,
+  "model_mount": {"source": "Your weight SFS /qwen36-35b-a3b/weights", "target": "/model/weights", "read_only": true, "local_storage_acceleration": true},
+  "runtime_mount": {"source": "Your distinct runtime SFS /qwen36-35b-a3b", "target": "/qwen-data", "read_only": false, "local_storage_acceleration": false},
+  "boot_command": "bash /qwen-data/startup/start.sh",
+  "automatic_rebuild": false,
+  "graceful_shutdown": true,
+  "platform_shutdown_seconds": 1200,
+  "shutdown_command": "bash /qwen-data/startup/stop.sh",
+  "engine_shutdown_seconds": 1080,
+  "stop_hook_deadline_seconds": 1150,
+  "health_probes": {"startup": {"path": "/health", "period": 10, "delay": 30, "timeout": 5, "failure_threshold": 360}, "readiness": {"path": "/health", "period": 10, "delay": 1, "timeout": 5, "failure_threshold": 3}, "liveness": {"path": "/health", "period": 30, "delay": 1, "timeout": 10, "failure_threshold": 10}},
+  "checks": ["Verify effective console settings before submission", "Check exact visible NPU count in the inference container", "Do not override platform device masks, POD_IP or driver mounts", "This container entry point does not toggle platform cache, shutdown or rebuild settings"],
+  "runtime_acceptance": "35B-A3B NPU deployment not yet executed"
+}

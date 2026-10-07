@@ -27,6 +27,8 @@ Date and operator: ____________________
 - [ ] Model mount read-only with platform local storage acceleration enabled.
 - [ ] Runtime mount writable and uncached.
 - [ ] Graceful shutdown enabled; effective timeout and command recorded.
+- [ ] Engine shutdown timeout 1080 and pre-stop hook deadline 1150 fit inside platform grace 1200.
+- [ ] Container preflight sees exactly eight allocated NPUs and the correct mounted 35B snapshot.
 - [ ] Automatic rebuild disabled and saved value rechecked.
 - [ ] Startup, readiness and liveness probes saved.
 - [ ] Intended private/public client route works with valid TLS.

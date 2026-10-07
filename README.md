@@ -8,6 +8,7 @@ Deploy a non-production BF16 chatbot on one eight-card Ascend A2 node using Huaw
 - [Printable HTML guide](DEPLOYMENT_GUIDE_EN.html): download and view locally; GitHub shows the HTML source.
 - [Direct snapshot download URLs](WEIGHT_DOWNLOAD_URLS.txt): all 40 files from the fixed official revision.
 - [Handover checklist](FINAL_CHECKLIST.md).
+- [ModelArts Standard script integration](MODELARTS_STARTUP_EN.md): container entry, platform mounts, NPU visibility and bounded shutdown.
 
 The target profile uses official `Qwen/Qwen3.6-35B-A3B` BF16 weights, TP8 / DP1 / EP8, and a native 262,144-token context. It enables platform local model-storage acceleration and graceful shutdown, and disables automatic rebuild.
 
@@ -19,6 +20,8 @@ The target profile uses official `Qwen/Qwen3.6-35B-A3B` BF16 weights, TP8 / DP1 
 | `scripts/inspect_image.py` | Inspect image architecture and package metadata |
 | `scripts/acceptance.py` | Chat, streaming, thinking, authentication and optional long-context checks |
 | `startup/` | ModelArts-native startup, process supervision, conditional thread preflight and stop hook |
+| `MODELARTS_CONSOLE_VALUES.json` | Human-readable platform configuration reference; not an API import file |
+| `tests/` | Synthetic control-flow checks; no NPU runtime or model load |
 | `examples/` | Chat and streaming request bodies |
 | `image-candidate.json` | Public ARM64 image digest and 35B validation scope |
 | `weight-snapshot.json` | Fixed 35B revision, 40-file inventory, sizes and published shard hashes |
