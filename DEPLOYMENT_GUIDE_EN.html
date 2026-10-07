@@ -1,0 +1,2251 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Qwen3.6 27B ModelArts Standard Deployment Guide</title><style>:root{--ink:#172a3c;--blue:#155b9c;--soft:#f4f7fb;--line:#dce5ee}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--soft);color:var(--ink);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}header{background:#122b45;color:#fff;padding:20px 32px;border-bottom:4px solid #5fb8e8}header strong{display:block;font-size:18px;letter-spacing:.02em}header span{font-size:13px;color:#cadbe9}.layout{display:grid;grid-template-columns:270px minmax(0,1040px);gap:26px;max-width:1370px;margin:28px auto;padding:0 24px}nav{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;padding:18px;background:#fff;border:1px solid var(--line);border-radius:8px}nav strong{font-size:13px;display:block;margin-bottom:12px;text-transform:uppercase;letter-spacing:.08em}nav a{display:block;font-size:13px;line-height:1.45;padding:8px 0;text-decoration:none;border-bottom:1px solid #edf2f7}a{color:var(--blue)}main{background:#fff;border:1px solid var(--line);border-radius:8px;padding:36px 44px;min-width:0}h1{font-size:32px;line-height:1.25;margin:0 0 20px}h2{font-size:24px;line-height:1.35;margin:42px 0 16px;border-top:2px solid var(--line);padding-top:22px;scroll-margin-top:24px}h3{font-size:19px;margin:26px 0 12px}p{margin:14px 0}li{margin:7px 0}table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.5;margin:20px 0;table-layout:auto}th{background:#e8f1fa;text-align:left;color:#133e67}th,td{padding:10px 12px;border:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}tr:nth-child(even) td{background:#fafcfe}code{font:13px/1.6 Consolas,monospace;background:#edf3f8;padding:2px 4px;border-radius:3px;overflow-wrap:anywhere}pre{background:#10263b;color:#eff6fd;border-radius:6px;padding:18px;overflow:auto;margin:20px 0}pre code{background:none;color:inherit;padding:0;border-radius:0;white-space:pre-wrap;overflow-wrap:anywhere}blockquote{margin:18px 0;border-left:4px solid #5ca8d9;padding:8px 18px;background:#f2f8fc}footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:#647688}@media(max-width:950px){.layout{display:block;padding:0 12px}nav{position:static;max-height:none;margin-bottom:20px}main{padding:25px 20px}h1{font-size:27px}table{font-size:12px}th,td{padding:8px}}@media print{@page{size:A4;margin:17mm}body{background:#fff;font-size:10.5pt;line-height:1.5}header,nav{display:none}.layout{display:block;max-width:none;margin:0;padding:0}main{border:0;border-radius:0;padding:0}h1{font-size:23pt}h2{font-size:16pt;break-after:avoid;margin-top:24pt;padding-top:12pt}h3{font-size:12pt;break-after:avoid}table{font-size:9pt}thead{display:table-header-group}tr{break-inside:avoid}pre{color:#172a3c;background:#f1f4f7;font-size:8.5pt;border:1px solid #dde4ea;break-inside:auto}pre code{font-size:8.5pt}a{color:#164f85;text-decoration:underline}footer{font-size:8pt}}</style></head><body><header><strong>Qwen3.6 27B deployment guide</strong><span>Huawei Cloud public cloud · ModelArts Standard · Ascend A2 · English · 7 October 2026</span></header><div class="layout"><nav aria-label="Contents"><strong>Step by step</strong><a href="#section-1">Purpose and deployment scope</a>
+<a href="#section-2">Step 1 Prepare the account and resource worksheet</a>
+<a href="#section-3">Step 2 Prepare one idle eight-card A2 node</a>
+<a href="#section-4">Step 3 Prepare model storage and runtime storage</a>
+<a href="#section-5">Step 4 Download and verify the official weights</a>
+<a href="#section-6">Step 5 Prepare an ARM64 inference image in your regional SWR</a>
+<a href="#section-7">Step 6 Stage the startup package and verification receipt</a>
+<a href="#section-8">Step 7 Create the real-time service</a>
+<a href="#section-9">Step 8 Configure the deployment and cached model mount</a>
+<a href="#section-10">Step 9 Configure the single inference unit</a>
+<a href="#section-11">Step 10 Configure health checks and deployment management</a>
+<a href="#section-12">Step 11 Review and submit</a>
+<a href="#section-13">Step 12 Wait for actual readiness</a>
+<a href="#section-14">Step 13 Configure the client route and API key</a>
+<a href="#section-15">Step 14 Validate chatbot behavior and native context</a>
+<a href="#section-16">Step 15 Verify shutdown and recovery before production use</a>
+<a href="#section-17">Step 16 Troubleshoot by the failing layer</a>
+<a href="#section-18">Step 17 Complete the handover record</a>
+<a href="#section-19">Appendix A Complete weight download addresses</a>
+<a href="#section-20">Appendix B Complete console option selection checklist</a>
+<a href="#section-21">Appendix C Complete deployment script source</a></nav><main><h1 id="deploy-qwen3.6-27b-on-huawei-cloud-modelarts-standard">Deploy Qwen3.6 27B on Huawei Cloud ModelArts Standard</h1>
+<h2 id="section-1">Purpose and deployment scope</h2>
+<p>Follow this guide to deploy a non-production chatbot using official <strong>Qwen3.6-27B BF16</strong> weights, one <strong>8-card Ascend A2 node</strong>, and a <strong>262,144-token context limit</strong> on Huawei Cloud public-cloud <strong>ModelArts Standard, new-version real-time inference</strong>. The result is an authenticated OpenAI-compatible chat API. A chatbot web interface is a separate application.</p>
+<p>The runtime settings below come from a successful eight-card reference deployment. Public-cloud resource names, service URLs, storage associations, drivers, and image availability must be resolved in your own account. The public release image selected in Step 5 is available and its ARM64 digest was checked on 7 October 2026; it is different from the retained image used in the reference deployment. Complete the acceptance steps with your selected image before handing over the service.</p>
+<p>The accompanying ZIP contains the guide, executable preparation and startup files, request examples, an acceptance script, and a final checklist. Appendices A, B and C provide the complete download-address inventory, a field-by-field console selection checklist, and the full script source. It does <strong>not</strong> contain the 55.6 GB weights, container image, API keys, or account-specific configuration.</p>
+<h3 id="target-configuration">Target configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Setting for this procedure</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Workload</td>
+<td>Text chatbot, including multi-turn and streaming chat</td>
+</tr>
+<tr>
+<td>Model repository</td>
+<td><code>Qwen/Qwen3.6-27B</code></td>
+</tr>
+<tr>
+<td>Weight revision</td>
+<td><code>6a9e13bd6fc8f0983b9b99948120bc37f49c13e9</code></td>
+</tr>
+<tr>
+<td>Weight precision</td>
+<td>BF16, no quantization</td>
+</tr>
+<tr>
+<td>Snapshot inventory</td>
+<td>29 files, 15 weight shards, 55,586,107,940 bytes</td>
+</tr>
+<tr>
+<td>Compute</td>
+<td>One dedicated node, 8 × Ascend A2, 64 GB HBM per card</td>
+</tr>
+<tr>
+<td>Engine topology</td>
+<td>TP8 / DP1, one deployment replica, one unit instance</td>
+</tr>
+<tr>
+<td>Context</td>
+<td>262,144 tokens, including input, chat template, reasoning and output</td>
+</tr>
+<tr>
+<td>Model alias</td>
+<td><code>qwen3.6-27b</code></td>
+</tr>
+<tr>
+<td>Container API</td>
+<td>HTTP, port 8000</td>
+</tr>
+<tr>
+<td>Client authentication</td>
+<td>ModelArts API key</td>
+</tr>
+<tr>
+<td>Model storage acceleration</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Graceful shutdown</td>
+<td>Enabled, 1,200 seconds</td>
+</tr>
+<tr>
+<td>Automatic rebuild</td>
+<td>Disabled</td>
+</tr>
+<tr>
+<td>Model prefix caching</td>
+<td>Disabled in this initial runtime profile</td>
+</tr>
+</tbody>
+</table>
+<p>The native model context is 262,144 tokens. This procedure does not apply a context extension or change RoPE settings. The weight configuration can legitimately identify the architecture as <code>Qwen3_5ForConditionalGeneration</code>: verify the repository revision rather than treating that architecture name as evidence that the wrong model was downloaded. See the <a href="https://huggingface.co/Qwen/Qwen3.6-27B">official model card</a>.</p>
+<h2 id="section-2">Step 1 Prepare the account and resource worksheet</h2>
+<ol>
+<li>Sign in to the Huawei Cloud console and choose the deployment region.</li>
+<li>Open <strong>ModelArts Standard</strong>. Locate <strong>Model Inference → Real-Time Inference</strong>. Some consoles display <strong>Model Deployment → Online Services</strong> for the same workflow.</li>
+<li>Select the <strong>new version</strong>. The following field tables do not describe the legacy custom-model import workflow.</li>
+<li>Confirm that your account can use a dedicated A2 inference resource pool in this region. If the region lacks the eight-card A2 specification, resolve resource availability before proceeding.</li>
+<li>Confirm permissions for ModelArts service deployment, SWR image access, SFS Turbo association, the preparation ECS, and the selected VPC/subnet. Have your administrator configure the required ModelArts agency. Restrict permissions to the project and resources used by this deployment.</li>
+<li>Confirm the cost and lifetime of the test. A dedicated resource pool may continue to incur charges after an inference deployment is stopped. Include ECS, SFS Turbo and image storage in the budget.</li>
+</ol>
+<p>Fill in this worksheet. All <code>CHANGE_ME</code> entries are placeholders and must be replaced.</p>
+<table>
+<thead>
+<tr>
+<th>Value to record</th>
+<th>Your value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Region and project</td>
+<td><code>CHANGE_ME_REGION</code>, <code>CHANGE_ME_PROJECT</code></td>
+</tr>
+<tr>
+<td>Dedicated resource pool and network</td>
+<td><code>CHANGE_ME_POOL</code>, <code>CHANGE_ME_POOL_NETWORK</code></td>
+</tr>
+<tr>
+<td>Selected idle eight-card node</td>
+<td><code>CHANGE_ME_NODE_NAME</code></td>
+</tr>
+<tr>
+<td>Weight SFS Turbo file system</td>
+<td><code>CHANGE_ME_WEIGHT_SFS</code></td>
+</tr>
+<tr>
+<td>Runtime SFS Turbo file system</td>
+<td><code>CHANGE_ME_RUNTIME_SFS</code></td>
+</tr>
+<tr>
+<td>Preparation ECS</td>
+<td><code>CHANGE_ME_PREPARATION_ECS</code></td>
+</tr>
+<tr>
+<td>SWR registry and organization</td>
+<td><code>CHANGE_ME_SWR_REGISTRY</code>, <code>CHANGE_ME_SWR_ORG</code></td>
+</tr>
+<tr>
+<td>Service name</td>
+<td><code>qwen36-27b-8a2-test</code></td>
+</tr>
+<tr>
+<td>Deployment name</td>
+<td><code>deploy-qwen36-bf16-tp8</code></td>
+</tr>
+<tr>
+<td>Authorized client network</td>
+<td><code>CHANGE_ME_CLIENT_VPC_OR_NETWORK</code></td>
+</tr>
+<tr>
+<td>API key owner</td>
+<td><code>CHANGE_ME_KEY_OWNER</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Checkpoint:</strong> The region, eight-card capacity, storage, image registry, client access route and resource owner are known. No existing production deployment needs to be changed.</p>
+<h2 id="section-3">Step 2 Prepare one idle eight-card A2 node</h2>
+<ol>
+<li>Go to <strong>Resource Management → Dedicated Compute Resources → Resource Pools</strong>. Older navigation may say <strong>Dedicated Resource Pools</strong>.</li>
+<li>Reuse an approved inference pool, or create a separate non-production pool with one eight-card A2 node.</li>
+<li>Open the pool and select <strong>Nodes</strong>.</li>
+<li>Verify the hardware family, ARM64 CPU architecture, driver version, node health and schedulability.</li>
+<li>Select a node with <strong>8 available NPUs</strong>, not merely eight total NPUs. Record its actual available CPU and memory as well.</li>
+<li>Confirm compatibility between the pool driver, the selected CANN image, and A2 hardware using the image release guidance. Do not upgrade a shared pool driver as an incidental part of this procedure.</li>
+<li>Check the node's data disk and image disk capacity. The container image is separate from the local model cache. Budget for expanded image layers, approximately 55.6 GB of cached weights, graph caches and logs; also meet the local-cache disk requirements shown by ModelArts for your pool/storage option.</li>
+</ol>
+<p>The reference request was <strong>8 NPUs, 120 vCPUs and 900,000 MiB of RAM</strong>. These CPU and RAM values are a reproducible reference allocation, not a universal minimum for Qwen. Use them only if your selected node can allocate them. A preset eight-card shape may ask for more CPU than the node currently has available; use a permitted custom specification rather than reducing the NPU count.</p>
+<p><strong>Checkpoint:</strong> Exactly one suitable non-production node can provide the full eight-card allocation. Record its driver and available resources.</p>
+<h2 id="section-4">Step 3 Prepare model storage and runtime storage</h2>
+<p>Use two distinct file systems in the main procedure:</p>
+<table>
+<thead>
+<tr>
+<th>File system</th>
+<th>Data</th>
+<th>Mount on preparation ECS</th>
+<th>Mount inside inference container</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Weight SFS Turbo</td>
+<td>Official snapshot</td>
+<td><code>/mnt/qwen-weights</code></td>
+<td><code>/model/weights</code>, read-only, cached</td>
+</tr>
+<tr>
+<td>Runtime SFS Turbo</td>
+<td>Startup scripts, verification receipt, logs and PID files</td>
+<td><code>/mnt/qwen-runtime</code></td>
+<td><code>/qwen-data</code>, read/write, uncached</td>
+</tr>
+</tbody>
+</table>
+<p>The public-cloud storage documentation limits repeat mounting of one SFS Turbo file system. Two distinct file systems avoid relying on the reference environment's ability to mount different subdirectories of the same file system twice. You can reuse two existing approved file systems. If you have only one, an alternative is a cached OBS parallel file system for the weights and SFS Turbo for runtime files; that is a storage variation and requires the appropriate OBS upload and agency configuration. See <a href="https://support.huaweicloud.com/intl/en-us/inference-modelarts/inference2.0-modelarts-0090.html">Storage Mounting</a>.</p>
+<h3 id="associate-both-sfs-turbo-file-systems">Associate both SFS Turbo file systems</h3>
+<ol>
+<li>In the SFS Turbo console, create or select file systems supported by ModelArts network association in your region. Use a type eligible for this feature; the association documentation specifies HPC file systems.</li>
+<li>Keep the file systems in the deployment region and choose a VPC/subnet reachable from the preparation ECS.</li>
+<li>Go to the ModelArts <strong>Resource Pool Networks</strong> page, or <strong>Resource Management → Network</strong> in the older navigation.</li>
+<li>Locate the network used by the dedicated pool.</li>
+<li>Choose <strong>More → Associate SFS Turbo</strong> or <strong>Add SFS Turbo</strong>.</li>
+<li>Select the weight and runtime file systems and the required subnet, then confirm.</li>
+<li>Verify <strong>Associated</strong> status for both. An SFS Turbo file system already associated with another network must not be silently reassociated.</li>
+<li>Keep these associations while the service is running. Follow the <a href="https://support.huaweicloud.com/intl/en-us/usermanual-standard-modelarts/resmgmt-modelarts_0096.html">official association procedure</a>.</li>
+</ol>
+<h3 id="mount-them-on-the-preparation-ecs">Mount them on the preparation ECS</h3>
+<p>Use a Linux ARM64 ECS with Python 3.10 or later, Docker, and access to Hugging Face, Quay and your regional SWR. The preparation ECS does not need an NPU. Allocate enough local disk for image layers and temporary image transfers; 100 GiB is a practical starting allocation to assess against your selected image.</p>
+<ol>
+<li>On each SFS Turbo details page, copy its actual mount command.</li>
+<li>Install the NFS client package for the ECS operating system if required.</li>
+<li>Create the two mount points, then run the console-provided commands against those mount points.</li>
+<li>Verify the mounts:</li>
+</ol>
+<pre><code class="language-bash">findmnt /mnt/qwen-weights
+findmnt /mnt/qwen-runtime
+df -h /mnt/qwen-weights /mnt/qwen-runtime
+</code></pre>
+<ol start="5">
+<li>Extract this deployment package on the ECS and enter its directory.</li>
+<li>Set these variables in the same shell used for the preparation commands:</li>
+</ol>
+<pre><code class="language-bash">export QWEN_MODEL_ROOT=/mnt/qwen-weights/qwen36-27b
+export QWEN_RUNTIME_ROOT=/mnt/qwen-runtime/qwen36-27b
+mkdir -p &quot;$QWEN_MODEL_ROOT/weights&quot; &quot;$QWEN_MODEL_ROOT/logs&quot;
+mkdir -p &quot;$QWEN_RUNTIME_ROOT/startup&quot; &quot;$QWEN_RUNTIME_ROOT/logs&quot; &quot;$QWEN_RUNTIME_ROOT/run&quot;
+</code></pre>
+<p>Provide at least 100 GiB of free model-storage space for this 55.6 GB snapshot and preparation overhead, while also meeting the cloud file system's provisioning minimum. Keep runtime storage space for retained logs. Actual SFS provisioning minima and billing depend on the selected type.</p>
+<p><strong>Checkpoint:</strong> Both mount points are actual mounted file systems, have sufficient space, and are writable by the preparation operator. Do not download into an unmounted directory that happens to have the same name.</p>
+<h2 id="section-5">Step 4 Download and verify the official weights</h2>
+<h3 id="official-download-addresses">Official download addresses</h3>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Address and use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Official Hugging Face repository</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B">Qwen/Qwen3.6-27B</a></td>
+</tr>
+<tr>
+<td>Exact snapshot file browser</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/tree/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9">Revision 6a9e13bd6fc8f0983b9b99948120bc37f49c13e9</a></td>
+</tr>
+<tr>
+<td>Pinned download manifest</td>
+<td><a href="https://huggingface.co/api/models/Qwen/Qwen3.6-27B/revision/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9?blobs=true">Immutable revision metadata with file sizes and LFS hashes</a></td>
+</tr>
+<tr>
+<td>Official ModelScope mirror</td>
+<td><a href="https://www.modelscope.cn/models/Qwen/Qwen3.6-27B">Qwen/Qwen3.6-27B</a></td>
+</tr>
+</tbody>
+</table>
+<p>The executable procedure downloads the fixed Hugging Face snapshot. ModelScope is an alternative official source, but its revision identifier and file inventory must be established separately; a Hugging Face Git revision must not be assumed to identify the same ModelScope revision. Do not substitute FP8, W8A8 or a different Qwen variant.</p>
+<p>Every file's direct fixed-revision URL is listed in Appendix A. Use the full snapshot downloader below instead of downloading only one <code>.safetensors</code> shard. Keep the tokenizer, processor, chat template, generation configuration and weight index with the model.</p>
+<p>Run on the preparation ECS, from the extracted deployment package:</p>
+<pre><code class="language-bash">python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install requests==2.32.5
+set -o pipefail
+python scripts/download_weights.py \
+  --root &quot;$QWEN_MODEL_ROOT&quot; \
+  --workers 8 \
+  2&gt;&amp;1 | tee &quot;$QWEN_MODEL_ROOT/logs/download.log&quot;
+</code></pre>
+<p>The downloader fixes the repository revision, checks the manifest, downloads all files, supports interrupted transfers, verifies published SHA256 values for weight shards, and records SHA256 values for the remaining files. It creates <code>weights-verified.json</code> only after successful verification.</p>
+<p>Expected final output:</p>
+<pre><code class="language-text">COMPLETE 29 55586107940
+</code></pre>
+<p>Confirm the receipt and configuration:</p>
+<pre><code class="language-bash">python - &quot;$QWEN_MODEL_ROOT&quot; &lt;&lt;'PY'
+import json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+receipt = json.loads((root / 'weights-verified.json').read_text())
+assert receipt['complete']
+assert receipt['revision'] == '6a9e13bd6fc8f0983b9b99948120bc37f49c13e9'
+assert len(receipt['files']) == 29
+assert receipt['total_bytes'] == 55586107940
+assert not list((root / 'weights').rglob('*.incomplete'))
+config = json.loads((root / 'weights/config.json').read_text())
+assert config['text_config']['max_position_embeddings'] == 262144
+print('VERIFIED:', config['architectures'], config['text_config'].get('dtype'))
+PY
+</code></pre>
+<p>If interrupted, rerun the same downloader against the same directory. Do not run two downloaders concurrently against that directory. If a hash mismatch persists, quarantine the affected file, investigate the source/network/storage, and rerun verification. A directory's existence is not proof of a complete snapshot.</p>
+<p><strong>Checkpoint:</strong> The success receipt exists, all indexed shards are present, and no incomplete files remain.</p>
+<h2 id="section-6">Step 5 Prepare an ARM64 inference image in your regional SWR</h2>
+<p>The main path uses the official A2 image <strong>vLLM-Ascend v0.23.0.post1</strong>, which is named in the <a href="https://docs.vllm.ai/projects/ascend/en/v0.23.0/tutorials/models/Qwen3.5-27B-Qwen3.6-27B.html">versioned Qwen3.6 A2 deployment tutorial</a>. Use the ARM64 image, not the <code>-a3</code>, <code>-a5</code> or <code>-310p</code> variant. The <a href="https://github.com/vllm-project/vllm-ascend/releases/tag/v0.23.0.post1">release notes</a> describe this release.</p>
+<h3 id="pull-the-public-image-by-its-arm64-digest">Pull the public image by its ARM64 digest</h3>
+<pre><code class="language-bash">export QWEN_SOURCE_IMAGE='quay.io/ascend/vllm-ascend@sha256:e62e85cb1bef9625cf568d0e8e2ac8e4b76f946eb6e8d9d459cfcf99565bea5d'
+docker pull --platform linux/arm64 &quot;$QWEN_SOURCE_IMAGE&quot;
+docker image inspect &quot;$QWEN_SOURCE_IMAGE&quot; \
+  --format '{{.Architecture}} {{.Os}} {{json .RepoDigests}}'
+</code></pre>
+<p>Expected architecture and OS: <strong>arm64 linux</strong>. The pinned ARM64 manifest is distinct from the multiarchitecture index digest recorded in <code>image-candidate.json</code>.</p>
+<p>On an ARM64 preparation ECS, inspect the package metadata without starting a model:</p>
+<pre><code class="language-bash">docker run --rm --platform linux/arm64 \
+  --entrypoint python \
+  -v &quot;$PWD/scripts/inspect_image.py:/tmp/inspect_image.py:ro&quot; \
+  &quot;$QWEN_SOURCE_IMAGE&quot; /tmp/inspect_image.py
+</code></pre>
+<p>Record the reported vLLM, vLLM-Ascend, Transformers and torch_npu versions. The public image metadata identifies CANN 9.1.0; confirm that the target pool driver is compatible. This metadata check does not replace an NPU runtime test.</p>
+<p>An x86 preparation ECS can pull and retag an ARM64 image with <code>--platform linux/arm64</code>; it cannot normally execute that image without emulation. Use an ARM64 preparation host for the Python inspection, or perform the inspection in the inference container after deployment.</p>
+<h3 id="push-to-your-swr-repository">Push to your SWR repository</h3>
+<ol>
+<li>Open <strong>SWR → Organizations</strong> and create or select your deployment organization.</li>
+<li>Obtain the SWR login instructions from the regional console. Authenticate using approved temporary credentials; do not put credentials into the deployment package or image.</li>
+<li>Set the real registry and organization:</li>
+</ol>
+<pre><code class="language-bash">export QWEN_SWR_REGISTRY='CHANGE_ME_SWR_REGISTRY'
+export QWEN_SWR_ORG='CHANGE_ME_SWR_ORG'
+export QWEN_DEST_IMAGE=&quot;$QWEN_SWR_REGISTRY/$QWEN_SWR_ORG/qwen36-vllm-ascend:v023-post1-arm64&quot;
+docker tag &quot;$QWEN_SOURCE_IMAGE&quot; &quot;$QWEN_DEST_IMAGE&quot;
+docker push &quot;$QWEN_DEST_IMAGE&quot;
+</code></pre>
+<ol start="4">
+<li>In <strong>SWR → My Images</strong>, verify the repository and tag.</li>
+<li>Open <strong>View Manifest</strong>, record the destination digest and architecture, and retain the push output. Deploy by digest if your console accepts it. Otherwise use a versioned tag and prevent that tag from being overwritten.</li>
+</ol>
+<p>The image provides the inference dependencies; mounted storage provides the weights and startup files. ModelArts starts the container and supplies devices. Do not put a nested <code>docker run</code>, <code>--privileged</code>, or manual device mounting into the ModelArts boot command. Image health endpoints and stdout logging follow <a href="https://support.huaweicloud.com/intl/en-us/inference-modelarts/inference2.0-modelarts-0003.html">Preparing an Inference Image</a>.</p>
+<h3 id="if-you-need-the-exact-reference-image">If you need the exact reference image</h3>
+<p>The successful reference runtime used manifest <code>sha256:26e8a40f1b7a4ed6b7242578aac79f07d6525ffad1427fa4ebd7e3ed166a6bcb</code>. Its historical Quay manifest was not publicly available when checked. Obtain an authorized export from the owner of the retained image, load it with <code>docker load</code>, verify ARM64 and its identity, then push it to your own SWR. Do not assume that the public release image is byte-identical to it. Do not use the reference environment's private registry address in another cloud account.</p>
+<p><strong>Checkpoint:</strong> The selected ARM64 image is accessible from your pool, its dependencies match the hardware, and the exact SWR tag/digest is recorded.</p>
+<h2 id="section-7">Step 6 Stage the startup package and verification receipt</h2>
+<p>Copy only the runtime files and model verification metadata to the runtime file system:</p>
+<pre><code class="language-bash">cp startup/start.sh startup/stop.sh startup/supervisor.py \
+  startup/thread_preflight.py &quot;$QWEN_RUNTIME_ROOT/startup/&quot;
+cp &quot;$QWEN_MODEL_ROOT/weights-verified.json&quot; &quot;$QWEN_RUNTIME_ROOT/weights-verified.json&quot;
+cp &quot;$QWEN_MODEL_ROOT/weight-manifest.json&quot; &quot;$QWEN_RUNTIME_ROOT/weight-manifest.json&quot;
+cp scripts/acceptance.py &quot;$QWEN_RUNTIME_ROOT/acceptance.py&quot;
+chmod 0755 &quot;$QWEN_RUNTIME_ROOT/startup/start.sh&quot; &quot;$QWEN_RUNTIME_ROOT/startup/stop.sh&quot;
+bash -n &quot;$QWEN_RUNTIME_ROOT/startup/start.sh&quot;
+bash -n &quot;$QWEN_RUNTIME_ROOT/startup/stop.sh&quot;
+python -m py_compile &quot;$QWEN_RUNTIME_ROOT/startup/supervisor.py&quot; \
+  &quot;$QWEN_RUNTIME_ROOT/startup/thread_preflight.py&quot;
+(cd &quot;$QWEN_RUNTIME_ROOT/startup&quot; &amp;&amp; sha256sum start.sh stop.sh supervisor.py thread_preflight.py &gt; SHA256SUMS)
+</code></pre>
+<p>The inference container must be able to read the scripts and receipt, and write to <code>logs/</code> and <code>run/</code>. The selected public image uses the default root identity in its metadata. If your organization runs it under another permitted UID, set ownership and directory permissions for that UID before deployment; also ensure its compiler/cache locations are writable. Keep permission changes confined to the new deployment directory.</p>
+<p>Expected layout:</p>
+<pre><code class="language-text">Weight SFS root                     Runtime SFS root
+/qwen36-27b/weights/                 /qwen36-27b/startup/start.sh
+  config.json                       /qwen36-27b/startup/stop.sh
+  model.safetensors.index.json       /qwen36-27b/startup/supervisor.py
+  model-00001-of-00015...             /qwen36-27b/startup/thread_preflight.py
+  tokenizer and processor files     /qwen36-27b/weights-verified.json
+                                    /qwen36-27b/logs/
+                                    /qwen36-27b/run/
+</code></pre>
+<p>The supervisor checks the cached model's file inventory before launching vLLM, records the actual package versions and arguments, sends logs to stdout and SFS, and forwards stop signals to the API server. PID files are isolated by Pod hostname. The thread preflight leaves the platform's security policy intact; it applies a narrow clone3 error-code compatibility rule only if a thread failure and inherited clone3 EPERM are actually observed. It was not needed by the reference runtime.</p>
+<p><strong>Checkpoint:</strong> All four startup files pass syntax checks, their checksums are saved, and the runtime receipt matches the weight snapshot.</p>
+<h2 id="section-8">Step 7 Create the real-time service</h2>
+<ol>
+<li>Open <strong>ModelArts → Model Inference → Real-Time Inference</strong>.</li>
+<li>Click <strong>Deploy</strong>.</li>
+<li>Enter the service information below.</li>
+<li>Choose the access route approved for your test clients. The reference profile uses private access. Public-cloud private access must be configured for your own VPC using the service's <strong>Intranet Access Management</strong> workflow; selecting private access alone does not establish connectivity.</li>
+<li>Click <strong>Next</strong> to open deployment configuration. See the <a href="https://support.huaweicloud.com/intl/id-id/inference-modelarts/inference2.0-modelarts-0016.html">public-cloud service information workflow</a>.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Service information field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Service Name</td>
+<td><code>qwen36-27b-8a2-test</code></td>
+</tr>
+<tr>
+<td>Description</td>
+<td><code>Nonproduction Qwen3.6-27B BF16 chatbot, 8 A2, 262144 context</code></td>
+</tr>
+<tr>
+<td>Service Protocol</td>
+<td>HTTPS</td>
+</tr>
+<tr>
+<td>Authentication Mode</td>
+<td>API KEY</td>
+</tr>
+<tr>
+<td>External Network Access</td>
+<td>Disabled for the private baseline</td>
+</tr>
+<tr>
+<td>Intranet Access Without Approval</td>
+<td>Disabled; retain your normal approval process</td>
+</tr>
+<tr>
+<td>Request Size Limit</td>
+<td>20 MB, if supported</td>
+</tr>
+<tr>
+<td>Request Timeout</td>
+<td>1,200 seconds, if supported</td>
+</tr>
+<tr>
+<td>Requests Per Second Limit</td>
+<td>200 as the reference gateway cap, not a throughput claim</td>
+</tr>
+<tr>
+<td>LTS Logging</td>
+<td>Enable an approved LTS destination if required; stdout and SFS logs are always provided by the package</td>
+</tr>
+</tbody>
+</table>
+<p>If a limit is unavailable or the allowed maximum is lower, record the effective limit. Do not silently shorten the model context or claim a timeout that the platform did not save. For a public client route, deliberately configure the supported public endpoint or ELB and access policy rather than copying a private deployment's addresses.</p>
+<p><strong>Checkpoint:</strong> You are creating an independent test service with the intended protocol, authentication and client access scope.</p>
+<h2 id="section-9">Step 8 Configure the deployment and cached model mount</h2>
+<table>
+<thead>
+<tr>
+<th>Deployment field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deployment Name</td>
+<td><code>deploy-qwen36-bf16-tp8</code></td>
+</tr>
+<tr>
+<td>Resource Pool</td>
+<td>Your dedicated A2 inference pool</td>
+</tr>
+<tr>
+<td>Deployment Replicas</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Model Source</td>
+<td>Custom Model</td>
+</tr>
+<tr>
+<td>Model Storage Type</td>
+<td>SFS Turbo</td>
+</tr>
+<tr>
+<td>File System</td>
+<td><code>CHANGE_ME_WEIGHT_SFS</code></td>
+</tr>
+<tr>
+<td>File System Directory</td>
+<td><code>/qwen36-27b/weights</code></td>
+</tr>
+<tr>
+<td>Container Mount Path</td>
+<td><code>/model/weights</code></td>
+</tr>
+<tr>
+<td>Mount Mode</td>
+<td>Read-only</td>
+</tr>
+<tr>
+<td>Local Storage Acceleration</td>
+<td><strong>Enabled</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>File System Directory</strong> is relative to the SFS file system root. Do not enter <code>/mnt/qwen-weights/...</code> into this field: that prefix exists only on the preparation ECS.</p>
+<p>Local storage acceleration caches weight files on the platform node. It is different from model prefix caching, which reuses computation for repeated prompts. This profile enables the former and disables the latter. If local storage acceleration is not exposed for your chosen storage/pool, report that limitation and select a supported storage path before treating the required setting as satisfied.</p>
+<p>Keep the completed weight directory immutable during inference. New weights should use a new directory/version and a controlled deployment update; modifying the source does not guarantee that an existing local cache refreshes.</p>
+<p><strong>Checkpoint:</strong> The selected file system is the weight file system, the container path is <code>/model/weights</code>, and acceleration is enabled.</p>
+<h2 id="section-10">Step 9 Configure the single inference unit</h2>
+<h3 id="compute-and-image">Compute and image</h3>
+<table>
+<thead>
+<tr>
+<th>Unit field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deployment Mode</td>
+<td>Basic Mode</td>
+</tr>
+<tr>
+<td>Unit Name</td>
+<td><code>role-0</code></td>
+</tr>
+<tr>
+<td>Unit Instances or Replicas</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Specification Type</td>
+<td>Custom, if available and needed</td>
+</tr>
+<tr>
+<td>NPU Count</td>
+<td><strong>8</strong></td>
+</tr>
+<tr>
+<td>CPU</td>
+<td>120 vCPUs for the reference allocation</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>900,000 MiB for the reference allocation</td>
+</tr>
+<tr>
+<td>Image Type</td>
+<td>Custom Image</td>
+</tr>
+<tr>
+<td>Image</td>
+<td>Your SWR image from Step 5</td>
+</tr>
+<tr>
+<td>Environment Variables</td>
+<td>None required in the form; <code>start.sh</code> sets the runtime environment</td>
+</tr>
+</tbody>
+</table>
+<p>If you use a preset shape, ensure it is an eight-card <strong>A2</strong> shape and fits the selected node's available CPU and memory. A single four-card instance or two unrelated four-card nodes does not reproduce TP8 on one node.</p>
+<h3 id="runtime-file-mount">Runtime file mount</h3>
+<ol>
+<li>Enable <strong>Mount File Storage</strong>.</li>
+<li>Click <strong>Configure</strong> or <strong>Modify Configuration</strong>.</li>
+<li>Under <strong>File Storage</strong>, add one entry.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Mount field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Storage Type</td>
+<td>SFS Turbo</td>
+</tr>
+<tr>
+<td>File System</td>
+<td><code>CHANGE_ME_RUNTIME_SFS</code>, distinct from the weight file system</td>
+</tr>
+<tr>
+<td>File System Directory</td>
+<td><code>/qwen36-27b</code></td>
+</tr>
+<tr>
+<td>Container Mount Path</td>
+<td><code>/qwen-data</code></td>
+</tr>
+<tr>
+<td>Mount Mode</td>
+<td>Read/Write</td>
+</tr>
+<tr>
+<td>Local Storage Acceleration</td>
+<td>Disabled for this mutable runtime mount</td>
+</tr>
+</tbody>
+</table>
+<ol start="4">
+<li>Confirm the dialog. This mount contains logs and Pod state that must remain visible immediately; weight acceleration remains enabled on the separate model mount.</li>
+</ol>
+<h3 id="boot-command-and-shutdown-settings">Boot command and shutdown settings</h3>
+<ol>
+<li>Expand <strong>Unit → More Settings</strong>.</li>
+<li>Paste this exact boot command into the command editor:</li>
+</ol>
+<pre><code class="language-bash">bash /qwen-data/startup/start.sh
+</code></pre>
+<ol start="3">
+<li>Read the editor's displayed text to make sure it was saved correctly.</li>
+<li>Set <strong>Automatic Rebuild = Disabled</strong>.</li>
+<li>Leave <strong>Auto Restart upon Hardware Fault = Disabled</strong> for this initial isolated test profile, or preserve an existing approved policy when adapting the procedure.</li>
+<li>Enable <strong>Graceful Shutdown</strong>.</li>
+<li>Set <strong>Shutdown Timeout = 1200 seconds</strong>, subject to your platform's supported range.</li>
+<li>Set the shutdown command:</li>
+</ol>
+<pre><code class="language-bash">bash /qwen-data/startup/stop.sh
+</code></pre>
+<ol start="9">
+<li>Enable <strong>Affinity Scheduling → Node Affinity → Strong Affinity</strong>.</li>
+<li>Select your approved idle eight-card node. If the dialog uses an <strong>Add Node</strong> action, add the selected row and verify the selected-node count is <strong>1</strong> before confirming.</li>
+</ol>
+<p>The shutdown hook requests termination from the API server and waits for the supervisor to exit. Actual draining remains bounded by the platform's grace period and the server's shutdown behavior. Verify draining in Step 15 before production use.</p>
+<h3 id="runtime-arguments-used-by-the-package">Runtime arguments used by the package</h3>
+<pre><code class="language-text">model                       /model/weights
+served-model-name           qwen3.6-27b
+host                        0.0.0.0
+port                        8000
+tensor-parallel-size        8
+data-parallel-size          1
+dtype                       bfloat16
+max-model-len               262144
+max-num-seqs                16
+max-num-batched-tokens      8192
+gpu-memory-utilization      0.90
+reasoning-parser            qwen3
+seed                        1024
+prefix caching              disabled
+compilation graph mode      FULL_DECODE_ONLY
+MTP                         disabled in this initial profile
+quantization                none
+</code></pre>
+<p>These are the BF16 reference settings, not the official tutorial's W8A8/MTP performance recipe. Do not add <code>--quantization ascend</code> to official BF16 weights. Sixteen maximum active sequences is a scheduler setting, not proof that sixteen simultaneous 256K conversations meet a service-level target.</p>
+<p><strong>Checkpoint:</strong> One unit instance requests eight NPUs, uses the correct image and mounts, and has the correct boot command, disabled rebuild and enabled shutdown settings.</p>
+<h2 id="section-11">Step 10 Configure health checks and deployment management</h2>
+<ol>
+<li>Enable <strong>Health Check</strong> and open its configuration.</li>
+<li>Enable all three probes. Set the path to <code>/health</code>, with HTTP requests against the inference container's port 8000.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Probe</th>
+<th>Protocol</th>
+<th style="text-align: right;">Period</th>
+<th style="text-align: right;">Initial Delay</th>
+<th style="text-align: right;">Timeout</th>
+<th style="text-align: right;">Failure Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Startup</td>
+<td>HTTP</td>
+<td style="text-align: right;">10 s</td>
+<td style="text-align: right;">30 s</td>
+<td style="text-align: right;">5 s</td>
+<td style="text-align: right;">360</td>
+</tr>
+<tr>
+<td>Readiness</td>
+<td>HTTP</td>
+<td style="text-align: right;">10 s</td>
+<td style="text-align: right;">1 s</td>
+<td style="text-align: right;">5 s</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr>
+<td>Liveness</td>
+<td>HTTP</td>
+<td style="text-align: right;">30 s</td>
+<td style="text-align: right;">1 s</td>
+<td style="text-align: right;">10 s</td>
+<td style="text-align: right;">10</td>
+</tr>
+</tbody>
+</table>
+<ol start="3">
+<li>Confirm the dialog and verify all three probes appear in the summary.</li>
+<li>Set <strong>Container Protocol = HTTP</strong> and <strong>Container Port = 8000</strong>. The client-facing HTTPS setting is separate from this container-side protocol.</li>
+<li>Expand deployment management settings:</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deployment Timeout</td>
+<td style="text-align: right;">120 minutes, if accepted</td>
+</tr>
+<tr>
+<td>Maximum Surge Replicas</td>
+<td style="text-align: right;">0%</td>
+</tr>
+<tr>
+<td>Maximum Unavailable Replicas</td>
+<td style="text-align: right;">100%</td>
+</tr>
+<tr>
+<td>Scheduling Priority</td>
+<td style="text-align: right;">Normal/default</td>
+</tr>
+</tbody>
+</table>
+<p>This one-replica test profile allows interruption during replacement. It is not a zero-downtime production upgrade plan. Startup probes allow initial model loading and graph preparation; readiness prevents traffic before the API is available. Liveness may restart an unhealthy container even when <strong>Automatic Rebuild</strong> is disabled, because these mechanisms serve different purposes.</p>
+<p>The public-cloud <a href="https://support.huaweicloud.com/intl/en-us/inference-modelarts/inference2.0-modelarts-0004.html">single-node deployment documentation</a> describes these controls. Record any region-specific field names or range differences in the final checklist.</p>
+<p><strong>Checkpoint:</strong> Port, protocol, all three probes, startup timeout and replacement settings are correct.</p>
+<h2 id="section-12">Step 11 Review and submit</h2>
+<p>Click <strong>Next</strong> and review <strong>Confirmation</strong>. Before clicking <strong>Confirm Deployment</strong>, verify:</p>
+<ul>
+<li>Correct non-production service and pool.</li>
+<li>Deployment replicas <strong>1</strong>, unit instances <strong>1</strong>, NPU count <strong>8</strong>.</li>
+<li>Correct ARM64 SWR image tag/digest.</li>
+<li>Weight SFS path <code>/qwen36-27b/weights</code> → <code>/model/weights</code>, read-only, <strong>local acceleration enabled</strong>.</li>
+<li>Runtime SFS path <code>/qwen36-27b</code> → <code>/qwen-data</code>, read/write, uncached.</li>
+<li>Boot command exactly <code>bash /qwen-data/startup/start.sh</code>.</li>
+<li>Automatic rebuild <strong>disabled</strong>.</li>
+<li>Graceful shutdown <strong>enabled</strong>, effective timeout saved, correct stop command.</li>
+<li>Strong affinity selects exactly the approved node.</li>
+<li>HTTP container port <strong>8000</strong>, three health probes, correct deployment timeout.</li>
+<li>Intended HTTPS client route and API key authentication.</li>
+<li>Rechecked node availability and approved resource cost.</li>
+</ul>
+<p>Save the configuration preview or a screenshot, then click <strong>Confirm Deployment</strong>. Record the service ID, deployment ID, version and submission time.</p>
+<p><strong>Checkpoint:</strong> The new service is listed as <strong>Deploying</strong> and references the intended deployment. Do not create a second copy because initial startup takes time.</p>
+<h2 id="section-13">Step 12 Wait for actual readiness</h2>
+<ol>
+<li>Open the service's <strong>Deployment</strong> tab.</li>
+<li>Open <strong>Replica Details</strong> or <strong>View Details</strong> and inspect the Pod's node.</li>
+<li>Confirm that the Pod is scheduled to the approved node.</li>
+<li>Inspect <strong>Events</strong> for image retrieval, successful storage mounting, and container start.</li>
+<li>Open <strong>Logs</strong>. Also inspect the runtime SFS logs from the preparation ECS:</li>
+</ol>
+<pre><code class="language-bash">ls -lt &quot;$QWEN_RUNTIME_ROOT/logs&quot;
+tail -n 80 &quot;$QWEN_RUNTIME_ROOT&quot;/logs/runtime-*.log
+</code></pre>
+<ol start="6">
+<li>Verify the actual startup record in <code>$QWEN_RUNTIME_ROOT/run/&lt;pod-hostname&gt;/launch-&lt;timestamp&gt;.json</code>.</li>
+<li>Look for the actual model path, BF16 precision, TP8, 262144 context, eight worker ranks, completed graph capture and <strong>Application startup complete</strong>.</li>
+<li>Wait until the service and deployment show <strong>Running</strong> and <strong>1/1 ready</strong>.</li>
+<li>Use <strong>Cloud Shell</strong> in the service, when available, to inspect <code>npu-smi info</code> and call <code>http://127.0.0.1:8000/health</code> inside the selected container.</li>
+</ol>
+<p>During startup, a probe can report connection refused before the server begins listening. Continue observing if loading/compilation logs are advancing and the startup window has not expired. If the process exits, a traceback occurs, or repeated OOM/HCCL errors appear, investigate instead of waiting indefinitely. The reference startup took about eight minutes; that is an observation from one environment, not an ETA for another region or image.</p>
+<p><strong>Checkpoint:</strong> All eight worker ranks belong to the intended model, and both platform readiness and the health endpoint succeed.</p>
+<h2 id="section-14">Step 13 Configure the client route and API key</h2>
+<ol>
+<li>On the service page, choose <strong>Service Calling</strong>.</li>
+<li>For private access, complete the service's <strong>Intranet Access Management</strong> process for your approved client VPC and verify the connection/application is effective.</li>
+<li>Copy the actual invocation URL shown for that route. Public-cloud URLs can use <code>/v2/infers/...</code>, while some other environments use <code>/v2/infer/...</code>. Do not construct the URL from a private example or by guessing the hostname.</li>
+<li>Open <strong>API Key Authorization Management</strong>.</li>
+<li>Reuse an approved key that is authorized for the new service, or create a key with the intended owner, expiration and service scope. If its scope is <strong>Specified real-time services</strong>, bind it to this service.</li>
+<li>Store the key in your client's secret manager or protected environment. The API key is separate from the SWR login and from IAM AK/SK credentials.</li>
+<li>Test from a client host that can reach the selected endpoint. Keep TLS certificate verification enabled. Use your approved CA bundle if the private route uses an enterprise CA.</li>
+</ol>
+<p>The new-version service uses <code>Authorization: Bearer &lt;API_KEY&gt;</code> as documented in <a href="https://support.huaweicloud.com/intl/en-us/inference-modelarts/inference2.0-modelarts-0008.html">API Key Authentication</a>.</p>
+<p>For the examples below, <code>QWEN_SERVICE_ROOT</code> means the copied ModelArts invocation prefix <strong>before</strong> the container's custom paths. For example, if the copied prefix ends with the service ID, <code>/v1/chat/completions</code> is appended to that prefix. If the console presents a complete chat URL, derive the prefix by removing that exact suffix once. Do not append <code>/v1</code> twice.</p>
+<pre><code class="language-bash">export QWEN_SERVICE_ROOT='CHANGE_ME_ACTUAL_SERVICE_INVOCATION_PREFIX'
+read -r -s -p 'ModelArts API key: ' QWEN_MODELARTS_API_KEY
+echo
+export QWEN_MODELARTS_API_KEY
+</code></pre>
+<p><strong>Checkpoint:</strong> The client's route reaches this service and its key is authorized for this service. No old service ID or private account address has been copied.</p>
+<h2 id="section-15">Step 14 Validate chatbot behavior and native context</h2>
+<p>Run the short tests first, then the long-context test. Use the same selected service throughout and do not use fallback routing.</p>
+<h3 id="model-listing-and-ordinary-chat">Model listing and ordinary chat</h3>
+<pre><code class="language-bash">curl --fail-with-body --silent --show-error \
+  -H &quot;Authorization: Bearer $QWEN_MODELARTS_API_KEY&quot; \
+  &quot;$QWEN_SERVICE_ROOT/v1/models&quot;
+
+curl --fail-with-body --silent --show-error \
+  -H &quot;Authorization: Bearer $QWEN_MODELARTS_API_KEY&quot; \
+  -H 'Content-Type: application/json' \
+  --data-binary @examples/chat.json \
+  &quot;$QWEN_SERVICE_ROOT/v1/chat/completions&quot;
+</code></pre>
+<p>Expected: the list contains <code>qwen3.6-27b</code>; the answer to the arithmetic request is <code>43</code> with a normal stop reason.</p>
+<h3 id="streaming-chat">Streaming chat</h3>
+<pre><code class="language-bash">curl --fail-with-body --silent --show-error --no-buffer \
+  -H &quot;Authorization: Bearer $QWEN_MODELARTS_API_KEY&quot; \
+  -H 'Content-Type: application/json' \
+  --data-binary @examples/stream.json \
+  &quot;$QWEN_SERVICE_ROOT/v1/chat/completions&quot;
+</code></pre>
+<p>Expected: incremental SSE data, readable output and a final <code>[DONE]</code> marker. Preserve Unicode and parse the stream as UTF-8.</p>
+<h3 id="complete-automated-functional-checks">Complete automated functional checks</h3>
+<pre><code class="language-bash">python scripts/acceptance.py \
+  --service-root &quot;$QWEN_SERVICE_ROOT&quot; \
+  --output &quot;acceptance-short-$(date -u +%Y%m%dT%H%M%SZ)&quot;
+
+python scripts/acceptance.py \
+  --service-root &quot;$QWEN_SERVICE_ROOT&quot; \
+  --long \
+  --output &quot;acceptance-256k-$(date -u +%Y%m%dT%H%M%SZ)&quot;
+</code></pre>
+<p>For an approved private CA, add <code>--ca-bundle /path/to/approved-ca.pem</code>. The script keeps TLS verification enabled and never saves the API key.</p>
+<p>The checks cover ordinary chat, Portuguese/Chinese text, multi-turn memory, streaming JSON, default thinking, a request close to the configured context limit, rejection of an oversized request, missing-key rejection and post-test health. The long test uses <code>/tokenize</code> to measure the chat input before generation. If your access gateway does not forward that path, you can run the staged test through Cloud Shell inside the inference container:</p>
+<pre><code class="language-bash">python /qwen-data/acceptance.py \
+  --service-root http://127.0.0.1:8000 \
+  --local-container --long \
+  --output &quot;/qwen-data/local-acceptance-$(date -u +%Y%m%dT%H%M%SZ)&quot;
+</code></pre>
+<p>That local test validates the runtime, skips gateway authentication checks, and does not prove that a long request passes through the external client route. Retain the short gateway tests and record the remaining route limitation. For end-to-end long-context acceptance, measure tokens with the matching local tokenizer and send the long chat request through the actual gateway.</p>
+<p>Acceptance conditions:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Pass condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Platform</td>
+<td>Running, 1/1 ready</td>
+</tr>
+<tr>
+<td>Devices and topology</td>
+<td>Eight ranks, TP8 / DP1</td>
+</tr>
+<tr>
+<td>Model listing</td>
+<td>Alias is present; effective max context is 262144</td>
+</tr>
+<tr>
+<td>Ordinary and multi-turn chat</td>
+<td>Correct final text, normal finish reason</td>
+</tr>
+<tr>
+<td>Streaming</td>
+<td>Non-empty valid UTF-8 output and <code>[DONE]</code></td>
+</tr>
+<tr>
+<td>Thinking</td>
+<td>Reasoning and final answer are returned separately</td>
+</tr>
+<tr>
+<td>Long context</td>
+<td>At least 261,000 measured input tokens, correct marker response, no OOM</td>
+</tr>
+<tr>
+<td>Over-context input</td>
+<td>HTTP 400</td>
+</tr>
+<tr>
+<td>Missing API key</td>
+<td>HTTP 401 or 403 on the authenticated ModelArts route</td>
+</tr>
+<tr>
+<td>After the requests</td>
+<td>Health returns 200 and the service remains ready</td>
+</tr>
+</tbody>
+</table>
+<p>The reference accepted <strong>261,797 input tokens</strong> and returned the correct marker; it also passed chat, multi-turn, streaming Unicode JSON, thinking, over-context rejection and missing-key rejection. These observations apply to the recorded reference runtime. Repeat the checks in the new region and selected public image. This is functional acceptance, not a QPS, latency, concurrency or production-quality benchmark.</p>
+<p><strong>Checkpoint:</strong> Preserve the acceptance JSON files, runtime log and selected image digest. Stop handover if a required check fails.</p>
+<h2 id="section-16">Step 15 Verify shutdown and recovery before production use</h2>
+<p>For a controlled non-production drill:</p>
+<ol>
+<li>Save the current configuration, script checksums, weight receipt, image digest and acceptance output.</li>
+<li>Stop sending new client requests. For a draining test, keep one small, bounded synthetic request active and record its completion or interruption.</li>
+<li>In <strong>Deployment</strong>, select only this Qwen test deployment and click <strong>Stop</strong>.</li>
+<li>Observe the runtime log for signal forwarding and server shutdown. Confirm the process exits within the saved grace period and the allocation is released or stopped according to the platform.</li>
+<li>Start the same saved deployment version. Before submission, recheck local weight acceleration, graceful shutdown and disabled automatic rebuild.</li>
+<li>Wait for 1/1 readiness, inspect actual ranks and repeat the short chat/stream checks.</li>
+<li>Record elapsed recovery time and whether the local model cache was reused. A changed/destroyed node may need to reload the weights.</li>
+</ol>
+<p>The reference deployment was later stopped after documentation was completed, with zero running and queued requests. Its supervisor forwarded the termination signal and the API process exited with code 0. The engine log also showed an internal abort shutdown timeout of zero and force cleanup of a remaining process. A restart/recovery drill and an in-flight-request draining drill were not executed. Therefore the enabled platform grace period is not proof that every in-flight request survives the selected runtime's shutdown; validate draining separately before production use.</p>
+<p>For a first deployment with no previous version, rollback means stopping the new Qwen service and retaining its evidence; no existing chatbot endpoint is switched by this procedure. For a later upgrade, retain the old immutable image, weight directory and scripts, and restore that saved version if the candidate fails acceptance. Stopping a deployment does not necessarily stop billing for its resource pool or storage.</p>
+<p><strong>Checkpoint:</strong> The operating team understands and, where required, has demonstrated shutdown, restart and rollback on the new environment.</p>
+<h2 id="section-17">Step 16 Troubleshoot by the failing layer</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Check and corrective action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A2 or new-version inference is unavailable</td>
+<td>Resolve region, quota and product availability. Do not apply this recipe to another accelerator family without redesigning it.</td>
+</tr>
+<tr>
+<td>SFS Turbo is absent from the selector</td>
+<td>Verify the dedicated pool, same region, eligible file system type, agency and network association.</td>
+</tr>
+<tr>
+<td>Mount rejected or PVC stays unbound</td>
+<td>Confirm both associations and directories. Use distinct file systems and non-nested mount paths.</td>
+</tr>
+<tr>
+<td>Eight cards cannot be scheduled</td>
+<td>Recheck available NPUs, CPU and RAM on the affinity node. A preset's requested CPU may exceed current allocatable CPU.</td>
+</tr>
+<tr>
+<td><code>exec format error</code></td>
+<td>The image/host architecture is wrong. Select ARM64 for the A2 pool.</td>
+</tr>
+<tr>
+<td>Image cannot be pulled</td>
+<td>Check the regional SWR address, repository permissions, pool connectivity and disk capacity.</td>
+</tr>
+<tr>
+<td>Receipt or startup file missing</td>
+<td>Verify that runtime SFS <code>/qwen36-27b</code> is mounted at <code>/qwen-data</code> and the receipt was copied after verification.</td>
+</tr>
+<tr>
+<td>Cached model inventory mismatch</td>
+<td>Check weight source and cached contents. Preserve evidence and refresh through a controlled deployment update; do not edit cached weight files in place.</td>
+</tr>
+<tr>
+<td>Port remains closed while logs advance</td>
+<td>Allow loading and graph capture within the configured startup window.</td>
+</tr>
+<tr>
+<td>OOM, unsupported operator, HCCL failure</td>
+<td>Preserve all rank logs and check image/driver compatibility. Do not hide the failure by reducing the promised context without an explicit change of scope.</td>
+</tr>
+<tr>
+<td>Thread creation fails</td>
+<td>Inspect the preflight result and exact errno. The bundled compatibility branch is conditional; do not disable the platform's seccomp protection.</td>
+</tr>
+<tr>
+<td>CPU NUMA binding is skipped</td>
+<td>Record the warning and check allowed CPU/NUMA placement. Functional success does not establish that CPU placement is optimal.</td>
+</tr>
+<tr>
+<td>Platform Running but chat fails</td>
+<td>Verify readiness, health, gateway route, API key binding, actual alias and container protocol/port.</td>
+</tr>
+<tr>
+<td>HTTP 404</td>
+<td>Check the copied invocation URL, singular/plural path, service ID, service version and readiness. Do not assume the model is missing based only on a gateway error.</td>
+</tr>
+<tr>
+<td>HTTP 401 or 403</td>
+<td>Check key expiration, owner and service scope/binding. Do not substitute IAM AK/SK or SWR credentials.</td>
+</tr>
+<tr>
+<td>TLS verification error</td>
+<td>Use the correct endpoint hostname and approved CA. Do not make <code>curl -k</code> or disabled certificate validation the deployment default.</td>
+</tr>
+<tr>
+<td>Output is truncated</td>
+<td>Check finish reason and output budget, including reasoning tokens. A transport 200 does not prove a complete answer.</td>
+</tr>
+<tr>
+<td>Long request exceeds the gateway timeout</td>
+<td>Check the effective gateway/client timeout; record the constraint separately from the model's context capability.</td>
+</tr>
+<tr>
+<td>Changed SFS weights are not visible</td>
+<td>A local model cache can remain stale. Use a new immutable source directory/version and a controlled update.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="section-18">Step 17 Complete the handover record</h2>
+<p>Fill in <code>FINAL_CHECKLIST.md</code> and retain:</p>
+<ul>
+<li>Service/deployment IDs, version, region and client invocation URL.</li>
+<li>Selected node, hardware family, driver, eight-rank topology and actual package versions.</li>
+<li>Source and SWR image digests, weight revision, verification receipt and startup checksums.</li>
+<li>Effective model and runtime mounts, permissions and acceleration values.</li>
+<li>Effective shutdown setting/command, automatic rebuild setting, probes and timeouts.</li>
+<li>Short, streaming, thinking and long-context acceptance output.</li>
+<li>Authentication and oversized-input negative results.</li>
+<li>Log locations, ownership, retention, restart/rollback instructions and unresolved constraints.</li>
+</ul>
+<p>Keep API keys and login credentials outside this record. The deployment is ready for non-production chatbot use when the required functional checks pass. Establish workload-specific concurrency and performance limits separately before production traffic.</p>
+<h2 id="section-19">Appendix A Complete weight download addresses</h2>
+<p>All addresses below refer to the same immutable official snapshot. The list contains all 29 files; 15 are model weight shards. The complete download and SHA256 verification procedure is in Step 4.</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Bytes</th>
+<th>Direct fixed revision download</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.gitattributes</code></td>
+<td style="text-align: right;">1,570</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/.gitattributes">Download</a></td>
+</tr>
+<tr>
+<td><code>LICENSE</code></td>
+<td style="text-align: right;">11,343</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/LICENSE">Download</a></td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td style="text-align: right;">62,593</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/README.md">Download</a></td>
+</tr>
+<tr>
+<td><code>chat_template.jinja</code></td>
+<td style="text-align: right;">7,764</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/chat_template.jinja">Download</a></td>
+</tr>
+<tr>
+<td><code>config.json</code></td>
+<td style="text-align: right;">4,308</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/config.json">Download</a></td>
+</tr>
+<tr>
+<td><code>configuration.json</code></td>
+<td style="text-align: right;">51</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/configuration.json">Download</a></td>
+</tr>
+<tr>
+<td><code>generation_config.json</code></td>
+<td style="text-align: right;">202</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/generation_config.json">Download</a></td>
+</tr>
+<tr>
+<td><code>merges.txt</code></td>
+<td style="text-align: right;">3,353,259</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/merges.txt">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00001-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,968,861,352</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00001-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00002-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,921,677,136</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00002-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00003-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,921,677,128</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00003-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00004-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,921,677,128</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00004-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00005-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,921,677,112</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00005-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00006-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,900,710,888</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00006-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00007-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,994,391,976</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00007-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00008-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,879,219,776</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00008-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00009-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,921,677,136</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00009-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00010-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,921,677,128</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00010-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00011-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,921,677,136</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00011-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00012-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,921,677,136</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00012-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00013-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,995,081,848</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00013-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00014-of-00015.safetensors</code></td>
+<td style="text-align: right;">3,942,652,952</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00014-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model-00015-of-00015.safetensors</code></td>
+<td style="text-align: right;">508,670,568</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model-00015-of-00015.safetensors">Download</a></td>
+</tr>
+<tr>
+<td><code>model.safetensors.index.json</code></td>
+<td style="text-align: right;">112,216</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/model.safetensors.index.json">Download</a></td>
+</tr>
+<tr>
+<td><code>preprocessor_config.json</code></td>
+<td style="text-align: right;">390</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/preprocessor_config.json">Download</a></td>
+</tr>
+<tr>
+<td><code>tokenizer.json</code></td>
+<td style="text-align: right;">12,807,982</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/tokenizer.json">Download</a></td>
+</tr>
+<tr>
+<td><code>tokenizer_config.json</code></td>
+<td style="text-align: right;">16,718</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/tokenizer_config.json">Download</a></td>
+</tr>
+<tr>
+<td><code>video_preprocessor_config.json</code></td>
+<td style="text-align: right;">385</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/video_preprocessor_config.json">Download</a></td>
+</tr>
+<tr>
+<td><code>vocab.json</code></td>
+<td style="text-align: right;">6,722,759</td>
+<td><a href="https://huggingface.co/Qwen/Qwen3.6-27B/resolve/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/vocab.json">Download</a></td>
+</tr>
+</tbody>
+</table>
+<p><code>WEIGHT_DOWNLOAD_URLS.txt</code> contains the same complete URLs as plain text. Published weight-shard hashes are checked by the downloader; the verification receipt records SHA256 for every downloaded file.</p>
+<h2 id="section-20">Appendix B Complete console option selection checklist</h2>
+<p>Use this checklist alongside the deployment wizard. It specifies selections for the isolated eight-card BF16 chatbot baseline, including fields that should stay blank or disabled. Labels vary slightly by region and console release. Hidden dependent controls do not need to be filled when their parent option is disabled. If your console exposes an additional mandatory field, resolve its platform requirement rather than guessing.</p>
+<h3 id="before-entering-the-deployment-wizard">Before entering the deployment wizard</h3>
+<table>
+<thead>
+<tr>
+<th>Console option</th>
+<th>Select or enter</th>
+<th>How to verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Region</td>
+<td>Your approved region with A2 inference capacity</td>
+<td>ModelArts, SWR and both SFS file systems use that region</td>
+</tr>
+<tr>
+<td>Project or workspace</td>
+<td>Your authorized non-production project/workspace</td>
+<td>Resources are visible in that scope</td>
+</tr>
+<tr>
+<td>ModelArts product</td>
+<td>ModelArts Standard</td>
+<td>New-version real-time inference workflow is available</td>
+</tr>
+<tr>
+<td>Inference service version</td>
+<td>New version</td>
+<td>Do not select the legacy online-service workflow</td>
+</tr>
+<tr>
+<td>Resource pool</td>
+<td>Dedicated A2 pool</td>
+<td>One node has eight available NPUs</td>
+</tr>
+<tr>
+<td>Resource pool network</td>
+<td>Network belonging to the selected pool</td>
+<td>Both SFS associations are effective</td>
+</tr>
+<tr>
+<td>SFS association</td>
+<td>Weight SFS and runtime SFS</td>
+<td>Distinct file systems, Associated status</td>
+</tr>
+<tr>
+<td>SWR organization/repository</td>
+<td>Your organization and <code>qwen36-vllm-ascend</code></td>
+<td>ARM64 image pushed and digest recorded</td>
+</tr>
+</tbody>
+</table>
+<h3 id="service-information-page">Service information page</h3>
+<table>
+<thead>
+<tr>
+<th>Console option</th>
+<th>Select or enter</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Service Name</td>
+<td><code>qwen36-27b-8a2-test</code></td>
+<td>Use a unique name if this already exists</td>
+</tr>
+<tr>
+<td>Description</td>
+<td><code>Nonproduction Qwen3.6-27B BF16 chatbot, 8 A2, 262144 context</code></td>
+<td>Plain descriptive text</td>
+</tr>
+<tr>
+<td>Service Access Type</td>
+<td>Default</td>
+<td>Do not select a custom ELB route unless it has been separately configured</td>
+</tr>
+<tr>
+<td>Service Protocol</td>
+<td>HTTPS</td>
+<td>Client-facing protocol</td>
+</tr>
+<tr>
+<td>Authentication Mode</td>
+<td>API KEY</td>
+<td>Do not choose No Authentication; IAM Token would require a different client setup</td>
+</tr>
+<tr>
+<td>Network More Settings</td>
+<td>Expand and review</td>
+<td>Do not rely only on collapsed summaries</td>
+</tr>
+<tr>
+<td>Dedicated Channel / Direct Channel</td>
+<td>Unchecked</td>
+<td>Baseline uses the normal approved private invocation route</td>
+</tr>
+<tr>
+<td>External Network Access</td>
+<td>Unchecked</td>
+<td>Private baseline; select only when intentionally deploying a public client route</td>
+</tr>
+<tr>
+<td>Intranet Access Without Approval</td>
+<td>Unchecked</td>
+<td>Preserve normal connection approvals</td>
+</tr>
+<tr>
+<td>Access Control switch</td>
+<td>Unchecked for the baseline</td>
+<td>An approved existing whitelist policy should be preserved rather than removed</td>
+</tr>
+<tr>
+<td>Whitelist / blacklist fields</td>
+<td>Leave unset while Access Control is disabled</td>
+<td>Populate only for a deliberately configured access policy</td>
+</tr>
+<tr>
+<td>Availability More Settings</td>
+<td>Expand</td>
+<td>Review all request limits</td>
+</tr>
+<tr>
+<td>Requests Per Second Limit</td>
+<td><code>200</code> if allowed</td>
+<td>Gateway cap, not guaranteed model QPS</td>
+</tr>
+<tr>
+<td>Request Size Limit</td>
+<td><code>20</code> MB if allowed</td>
+<td>Save the actual platform-accepted limit</td>
+</tr>
+<tr>
+<td>Request Timeout</td>
+<td><code>1200</code> seconds if allowed</td>
+<td>Save the actual platform-accepted limit</td>
+</tr>
+<tr>
+<td>Advanced Settings</td>
+<td>Expand and review</td>
+<td>Optional settings are not silently enabled</td>
+</tr>
+<tr>
+<td>Connect Logs to LTS</td>
+<td>Unchecked for the minimal baseline</td>
+<td>If enabled, choose an approved LTS destination and retention policy</td>
+</tr>
+<tr>
+<td>LTS group / stream fields</td>
+<td>Not configured while LTS is disabled</td>
+<td>Do not create unrelated log resources</td>
+</tr>
+<tr>
+<td>Tags</td>
+<td>Leave empty, or add required organization tags</td>
+<td>For example, an approved non-production classification</td>
+</tr>
+<tr>
+<td>Only Create Service button</td>
+<td>Do not use for the main procedure</td>
+<td>It creates service information without the inference deployment</td>
+</tr>
+<tr>
+<td>Next button</td>
+<td>Select after reviewing service settings</td>
+<td>Continue to Deployment Settings</td>
+</tr>
+</tbody>
+</table>
+<h3 id="deployment-basics-and-model-configuration">Deployment basics and model configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Console option</th>
+<th>Select or enter</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deployment Name</td>
+<td><code>deploy-qwen36-bf16-tp8</code></td>
+<td>Independent deployment</td>
+</tr>
+<tr>
+<td>Deployment Description</td>
+<td><code>Official BF16 Qwen3.6-27B, TP8, chatbot, native 262144 context</code></td>
+<td>Optional; do not put secrets here</td>
+</tr>
+<tr>
+<td>Resource Pool selector</td>
+<td>Your approved dedicated A2 pool</td>
+<td>Review available NPU/CPU/memory numbers</td>
+</tr>
+<tr>
+<td>Deployment Replicas</td>
+<td><code>1</code></td>
+<td>One node for this baseline</td>
+</tr>
+<tr>
+<td>Model Source</td>
+<td>Custom Model</td>
+<td>Not a preset/other model</td>
+</tr>
+<tr>
+<td>Model Storage Type</td>
+<td>SFS Turbo</td>
+<td>Main procedure uses the weight file system</td>
+</tr>
+<tr>
+<td>Weight File System</td>
+<td>Your weight SFS</td>
+<td>Different from runtime SFS</td>
+</tr>
+<tr>
+<td>Weight File System Directory</td>
+<td><code>/qwen36-27b/weights</code></td>
+<td>Relative to file system root, not an ECS mount prefix</td>
+</tr>
+<tr>
+<td>Weight Container Mount Path</td>
+<td><code>/model/weights</code></td>
+<td>Matches supervisor argument</td>
+</tr>
+<tr>
+<td>Weight Mount Mode</td>
+<td>Read-only</td>
+<td>The inference engine must not edit the snapshot</td>
+</tr>
+<tr>
+<td>Weight Local Storage Acceleration</td>
+<td>Enabled</td>
+<td>Platform weight cache; independent of model prefix caching</td>
+</tr>
+<tr>
+<td>Additional Models / Add Model</td>
+<td>Do not add another model</td>
+<td>One complete snapshot is used</td>
+</tr>
+<tr>
+<td>Pre-warmed Model option</td>
+<td>Do not select for this procedure</td>
+<td>Requires a separate prewarming process</td>
+</tr>
+<tr>
+<td>Model preheating URL, if shown</td>
+<td>Leave empty for this baseline</td>
+<td>Do not invent a URL or copy one from another service</td>
+</tr>
+</tbody>
+</table>
+<h3 id="unit-compute-and-image-configuration">Unit compute and image configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Console option</th>
+<th>Select or enter</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deployment Mode</td>
+<td>Basic Mode</td>
+<td>Do not select Multi-role / PD Disaggregation</td>
+</tr>
+<tr>
+<td>Unit Name</td>
+<td><code>role-0</code></td>
+<td>One unit hosts the full service</td>
+</tr>
+<tr>
+<td>Specification Type</td>
+<td>Custom if needed and available</td>
+<td>Preset is acceptable only if it is eight-card A2 and fits the node</td>
+</tr>
+<tr>
+<td>NPU Cards</td>
+<td><code>8</code></td>
+<td>Not 4 and not 8 replicas of a one-card shape</td>
+</tr>
+<tr>
+<td>CPU</td>
+<td><code>120</code> vCPUs</td>
+<td>Reference allocation; must fit available CPU</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td><code>900000</code> MiB</td>
+<td>Reference allocation; must fit available RAM</td>
+</tr>
+<tr>
+<td>Unit Instances / Replicas</td>
+<td><code>1</code></td>
+<td>Total allocation remains one eight-card node</td>
+</tr>
+<tr>
+<td>Preset Flavor, when using Custom</td>
+<td>Not applicable</td>
+<td>Do not also select a conflicting preset</td>
+</tr>
+<tr>
+<td>Image Type</td>
+<td>Custom Image</td>
+<td>Not Preset Image or Resource Pool Pre-warmed Image</td>
+</tr>
+<tr>
+<td>Image Source</td>
+<td>SWR → your repository → selected ARM64 tag</td>
+<td>Use the artifact prepared in Step 5</td>
+</tr>
+<tr>
+<td>Image tag/digest</td>
+<td>Your fixed SWR tag/digest</td>
+<td>Record the exact manifest; do not select an arbitrary latest/nightly tag</td>
+</tr>
+<tr>
+<td>Environment Variables</td>
+<td>Leave empty in the form</td>
+<td><code>start.sh</code> sets all required environment variables</td>
+</tr>
+<tr>
+<td>Add Environment Variable button</td>
+<td>No entries for this baseline</td>
+<td>Do not place API keys here</td>
+</tr>
+<tr>
+<td>Local Upload of Environment Variables</td>
+<td>Do not use</td>
+<td>No separate environment file is required</td>
+</tr>
+</tbody>
+</table>
+<h3 id="file-storage-configuration-dialog">File storage configuration dialog</h3>
+<table>
+<thead>
+<tr>
+<th>Console option</th>
+<th>Select or enter</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mount File Storage switch</td>
+<td>Checked</td>
+<td>Startup files and live logs require this mount</td>
+</tr>
+<tr>
+<td>Modify Configuration</td>
+<td>Open</td>
+<td>Review the saved mount entry</td>
+</tr>
+<tr>
+<td>File Storage → Add</td>
+<td>Add exactly one runtime mount</td>
+<td>Model mount is configured separately</td>
+</tr>
+<tr>
+<td>Runtime Storage Type</td>
+<td>SFS Turbo</td>
+<td>Main procedure uses runtime SFS</td>
+</tr>
+<tr>
+<td>Runtime File System</td>
+<td>Your runtime SFS</td>
+<td>Distinct from weight SFS</td>
+</tr>
+<tr>
+<td>Runtime File System Directory</td>
+<td><code>/qwen36-27b</code></td>
+<td>Contains startup, receipt, logs and run directories</td>
+</tr>
+<tr>
+<td>Runtime Container Mount Path</td>
+<td><code>/qwen-data</code></td>
+<td>Matches boot and shutdown commands</td>
+</tr>
+<tr>
+<td>Runtime Mount Mode</td>
+<td>Read/Write</td>
+<td>Logs and per-Pod PID state are written here</td>
+</tr>
+<tr>
+<td>Runtime Local Storage Acceleration</td>
+<td>Disabled</td>
+<td>Keep live logs and mutable state directly on SFS</td>
+</tr>
+<tr>
+<td>Additional File Storage entries</td>
+<td>None</td>
+<td>Do not add unnecessary or nested mounts</td>
+</tr>
+<tr>
+<td>Artifact Dumping → Add</td>
+<td>No entry</td>
+<td>Supervisor already writes logs to the runtime mount</td>
+</tr>
+<tr>
+<td>Confirm in the dialog</td>
+<td>Select after verifying the entry</td>
+<td>The summary must show one runtime mount</td>
+</tr>
+</tbody>
+</table>
+<h3 id="unit-more-settings-and-affinity-dialog">Unit More Settings and affinity dialog</h3>
+<table>
+<thead>
+<tr>
+<th>Console option</th>
+<th>Select or enter</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unit More Settings</td>
+<td>Expand</td>
+<td>Review both command editors and every switch</td>
+</tr>
+<tr>
+<td>Boot Command</td>
+<td><code>bash /qwen-data/startup/start.sh</code></td>
+<td>Copy exactly; no nested Docker command</td>
+</tr>
+<tr>
+<td>Automatic Rebuild</td>
+<td>Unchecked</td>
+<td>Required deployment default</td>
+</tr>
+<tr>
+<td>Rebuild Policy / Strategy</td>
+<td>Not configured because rebuild is disabled</td>
+<td>Do not select Deployment Replica / Unit / Pod rebuild policies</td>
+</tr>
+<tr>
+<td>Auto Restart upon Hardware Fault</td>
+<td>Unchecked for this isolated initial baseline</td>
+<td>Preserve an existing approved policy if adapting a service</td>
+</tr>
+<tr>
+<td>Graceful Shutdown</td>
+<td>Checked</td>
+<td>Required deployment default</td>
+</tr>
+<tr>
+<td>Shutdown Timeout</td>
+<td><code>1200</code> seconds if allowed</td>
+<td>Record the saved effective value</td>
+</tr>
+<tr>
+<td>Shutdown Command</td>
+<td><code>bash /qwen-data/startup/stop.sh</code></td>
+<td>Full script appears in Appendix C</td>
+</tr>
+<tr>
+<td>Affinity Scheduling</td>
+<td>Checked</td>
+<td>Choose an approved non-production node</td>
+</tr>
+<tr>
+<td>Affinity Type</td>
+<td>Node Affinity</td>
+<td>Not Node Anti-affinity</td>
+</tr>
+<tr>
+<td>Affinity Strength</td>
+<td>Strong Affinity</td>
+<td>Not Weak Affinity for this fixed-node baseline</td>
+</tr>
+<tr>
+<td>Selected Node</td>
+<td>Your idle eight-card A2 node</td>
+<td>Node name comes from your pool; no private example IP is supplied</td>
+</tr>
+<tr>
+<td>Add Node action, if present</td>
+<td>Add the selected row</td>
+<td>Merely highlighting a row may not add it</td>
+</tr>
+<tr>
+<td>Selected-node count</td>
+<td><code>1</code></td>
+<td>Recheck before confirming the dialog</td>
+</tr>
+<tr>
+<td>Specify Container Running User ID</td>
+<td>Unchecked for the selected image's default root identity</td>
+<td>If policy mandates a different UID, configure it explicitly and fix scoped ownership/cache permissions</td>
+</tr>
+<tr>
+<td>Container UID field while switch is disabled</td>
+<td>Not configured</td>
+<td>No guessed UID</td>
+</tr>
+</tbody>
+</table>
+<h3 id="health-check-dialog">Health check dialog</h3>
+<p>Enable HTTP Request Check for all three probes. Do not choose Execute Command Check for this baseline. Each probe uses the container's HTTP port 8000.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Startup probe</th>
+<th>Readiness probe</th>
+<th>Liveness probe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enable switch</td>
+<td>Checked</td>
+<td>Checked</td>
+<td>Checked</td>
+</tr>
+<tr>
+<td>Check Method</td>
+<td>HTTP Request Check</td>
+<td>HTTP Request Check</td>
+<td>HTTP Request Check</td>
+</tr>
+<tr>
+<td>Health URL</td>
+<td><code>/health</code></td>
+<td><code>/health</code></td>
+<td><code>/health</code></td>
+</tr>
+<tr>
+<td>Health Command field</td>
+<td>Not applicable</td>
+<td>Not applicable</td>
+<td>Not applicable</td>
+</tr>
+<tr>
+<td>Protocol</td>
+<td>HTTP</td>
+<td>HTTP</td>
+<td>HTTP</td>
+</tr>
+<tr>
+<td>Period in seconds</td>
+<td><code>10</code></td>
+<td><code>10</code></td>
+<td><code>30</code></td>
+</tr>
+<tr>
+<td>Initial delay in seconds</td>
+<td><code>30</code></td>
+<td><code>1</code></td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td>Timeout in seconds</td>
+<td><code>5</code></td>
+<td><code>5</code></td>
+<td><code>10</code></td>
+</tr>
+<tr>
+<td>Failure threshold</td>
+<td><code>360</code></td>
+<td><code>3</code></td>
+<td><code>10</code></td>
+</tr>
+</tbody>
+</table>
+<p>After confirmation, the unit summary must list Startup, Readiness and Liveness. Do not assume that checking the parent Health Check switch saved the three probe definitions.</p>
+<h3 id="deployment-management-and-advanced-settings">Deployment management and advanced settings</h3>
+<table>
+<thead>
+<tr>
+<th>Console option</th>
+<th>Select or enter</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Container Protocol</td>
+<td>HTTP</td>
+<td>Separate from client-facing HTTPS</td>
+</tr>
+<tr>
+<td>Container Port</td>
+<td><code>8000</code></td>
+<td>Do not use the image documentation's generic 8080 example</td>
+</tr>
+<tr>
+<td>Deployment Management More Settings</td>
+<td>Expand</td>
+<td>Review timing and replacement limits</td>
+</tr>
+<tr>
+<td>Deployment Timeout</td>
+<td><code>120</code> minutes if allowed</td>
+<td>Record any lower effective platform limit</td>
+</tr>
+<tr>
+<td>Maximum Surge Replicas</td>
+<td><code>0</code> percent</td>
+<td>Avoid allocating an additional eight-card replacement Pod</td>
+</tr>
+<tr>
+<td>Maximum Unavailable Replicas</td>
+<td><code>100</code> percent</td>
+<td>This single-replica test allows an interruption during replacement</td>
+</tr>
+<tr>
+<td>Scheduling Priority</td>
+<td>Default / <code>1</code> where this scale is shown</td>
+<td>Do not raise priority to preempt another workload</td>
+</tr>
+<tr>
+<td>Secret Configuration switch, if present</td>
+<td>Unchecked for this SFS-only, offline-model startup baseline</td>
+<td>If the platform requires a storage credential, use its approved agency/DEW workflow instead of disabling that requirement</td>
+</tr>
+<tr>
+<td>Secret bindings/paths while switch is disabled</td>
+<td>None</td>
+<td>API key remains on the caller side</td>
+</tr>
+<tr>
+<td>System Log Reporting</td>
+<td>Unchecked for the minimal baseline</td>
+<td>Stdout and runtime SFS logs remain available</td>
+</tr>
+<tr>
+<td>Additional Deployment / Unit entries</td>
+<td>None</td>
+<td>Exactly one deployment and one unit are used</td>
+</tr>
+<tr>
+<td>Confirmation page</td>
+<td>Review all saved values</td>
+<td>Especially both cache values, shutdown, rebuild and counts</td>
+</tr>
+<tr>
+<td>Confirm Deployment button</td>
+<td>Select only after the review</td>
+<td>Record service ID, deployment ID, version and time</td>
+</tr>
+</tbody>
+</table>
+<h3 id="after-deployment">After deployment</h3>
+<table>
+<thead>
+<tr>
+<th>Console option</th>
+<th>Select or enter</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Service status</td>
+<td>Running</td>
+<td>Must also have a ready inference replica</td>
+</tr>
+<tr>
+<td>Deployment status</td>
+<td>Running, <code>1/1</code> ready</td>
+<td>Do not rely solely on the service banner</td>
+</tr>
+<tr>
+<td>Traffic Weight</td>
+<td><code>100</code> for this service's only deployment</td>
+<td>Does not mean production traffic was switched</td>
+</tr>
+<tr>
+<td>Image/Mirror Traffic</td>
+<td>Disabled</td>
+<td>No mirror deployment is configured</td>
+</tr>
+<tr>
+<td>Automatic Scaling</td>
+<td>Not configured</td>
+<td>Start with one fixed test replica</td>
+</tr>
+<tr>
+<td>Intranet Access Management</td>
+<td>Configure/approve only the intended client route</td>
+<td>Verify connection/application status</td>
+</tr>
+<tr>
+<td>API Key Authorization Scope</td>
+<td>Specified real-time service(s), or an approved existing scope</td>
+<td>Bind the key to this service when required</td>
+</tr>
+<tr>
+<td>API Key expiration/name/owner</td>
+<td>Approved organization values</td>
+<td>No reusable secret is embedded in the guide</td>
+</tr>
+<tr>
+<td>Service Calling URL</td>
+<td>Copy the exact current invocation URL</td>
+<td>Do not guess singular/plural URL paths</td>
+</tr>
+<tr>
+<td>Stop</td>
+<td>Select this Qwen deployment when ending the test</td>
+<td>Wait for Stopped and zero ready replicas; retain weights/scripts</td>
+</tr>
+<tr>
+<td>Delete</td>
+<td>Do not select as part of stopping</td>
+<td>Deletion is a separate resource-management action</td>
+</tr>
+</tbody>
+</table>
+<h2 id="section-21">Appendix C Complete deployment script source</h2>
+<p>The following code blocks are complete copies of the distributed script files. Prefer the files from the ZIP, verify <code>SHA256SUMS</code>, and use Step 6 to stage them. The included startup and stop hooks use the portable public-cloud paths; they do not depend on a private account, registry, IP address or secret file.</p>
+<h3 id="scriptsdownload_weights.py">scripts/download_weights.py</h3>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;Download and verify the pinned official Qwen3.6-27B snapshot.&quot;&quot;&quot;
+import argparse
+import concurrent.futures
+import hashlib
+import json
+import os
+from pathlib import Path
+import time
+import requests
+
+REPO = 'Qwen/Qwen3.6-27B'
+REVISION = '6a9e13bd6fc8f0983b9b99948120bc37f49c13e9'
+EXPECTED_BYTES = 55586107940
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--root', required=True, type=Path)
+    parser.add_argument('--workers', type=int, default=8)
+    parser.add_argument('--metadata-only', action='store_true')
+    args = parser.parse_args()
+    if not 1 &lt;= args.workers &lt;= 16:
+        parser.error('--workers must be between 1 and 16')
+    root = args.root.resolve()
+    weights = root / 'weights'
+    weights.mkdir(parents=True, exist_ok=True)
+    response = requests.get(f'https://huggingface.co/api/models/{REPO}/revision/{REVISION}?blobs=true', timeout=60)
+    response.raise_for_status()
+    manifest = response.json()
+    if manifest['sha'] != REVISION or sum(x['size'] for x in manifest['siblings']) != EXPECTED_BYTES:
+        raise RuntimeError('Pinned snapshot manifest does not match the reference inventory')
+    (root / 'weight-manifest.json').write_text(json.dumps(manifest, indent=2))
+    print(f'MANIFEST {REVISION} {len(manifest[&quot;siblings&quot;])} files {EXPECTED_BYTES} bytes', flush=True)
+    if args.metadata_only:
+        return
+    # An old success receipt must not survive a failed repeat verification.
+    receipt = root / 'weights-verified.json'
+    if receipt.exists():
+        os.replace(receipt, root / 'weights-verified.previous.json')
+
+    def get_file(item):
+        name, size = item['rfilename'], item['size']
+        target = weights / name
+        if not target.resolve().is_relative_to(weights.resolve()):
+            raise RuntimeError('Unsafe manifest path')
+        target.parent.mkdir(parents=True, exist_ok=True)
+        partial = target.with_name(target.name + '.incomplete')
+        expected = item.get('lfs', {}).get('sha256')
+        candidate = target
+        if not target.exists() or target.stat().st_size != size:
+            candidate = partial
+            for attempt in range(6):
+                try:
+                    offset = partial.stat().st_size if partial.exists() else 0
+                    if offset &gt; size:
+                        raise RuntimeError(f'Oversized partial file: {partial}; inspect before repairing')
+                    if offset == size:
+                        break
+                    headers = {'Range': f'bytes={offset}-'} if offset else {}
+                    with requests.get(f'https://huggingface.co/{REPO}/resolve/{REVISION}/{name}', headers=headers, stream=True, timeout=(30, 120)) as result:
+                        result.raise_for_status()
+                        if offset and result.status_code == 206:
+                            actual = result.headers.get('Content-Range', '').split(' ')[-1].split('-')[0]
+                            if actual != str(offset):
+                                raise RuntimeError('Unexpected Content-Range; partial file preserved')
+                        elif offset:
+                            offset = 0  # Server ignored Range: safely replace the partial byte stream.
+                        with partial.open('ab' if offset else 'wb') as output:
+                            for chunk in result.iter_content(8 * 1024 * 1024):
+                                output.write(chunk)
+                    if partial.stat().st_size != size:
+                        raise RuntimeError(f'Incomplete size for {name}: {partial.stat().st_size}/{size}')
+                    break
+                except Exception as error:
+                    print('RETRY', name, attempt + 1, type(error).__name__, flush=True)
+                    if attempt == 5:
+                        raise
+                    time.sleep(3)
+        digest = hashlib.sha256()
+        with candidate.open('rb') as source:
+            for chunk in iter(lambda: source.read(16 * 1024 * 1024), b''):
+                digest.update(chunk)
+        actual = digest.hexdigest()
+        if expected and actual != expected:
+            raise RuntimeError(f'SHA256 mismatch for {candidate}; do not deploy this snapshot')
+        if candidate == partial:
+            os.replace(partial, target)
+        print('VERIFIED', name, size, actual, flush=True)
+        return {'file': name, 'bytes': size, 'sha256': actual, 'published_sha256_checked': bool(expected)}
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool:
+        files = list(pool.map(get_file, manifest['siblings']))
+    index = json.loads((weights / 'model.safetensors.index.json').read_text())
+    if not all((weights / name).is_file() for name in set(index['weight_map'].values())):
+        raise RuntimeError('Incomplete weight index')
+    if list(weights.rglob('*.incomplete')):
+        raise RuntimeError('Unfinished downloads remain')
+    result = {'revision': REVISION, 'files': files, 'total_bytes': sum(x['bytes'] for x in files), 'complete': True}
+    temporary = root / 'weights-verified.json.tmp'
+    temporary.write_text(json.dumps(result, indent=2))
+    os.replace(temporary, receipt)
+    print('COMPLETE', len(files), result['total_bytes'], flush=True)
+
+if __name__ == '__main__':
+    main()
+</code></pre>
+<h3 id="scriptsinspect_image.py">scripts/inspect_image.py</h3>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;Metadata inspection inside the selected inference image; no model start.&quot;&quot;&quot;
+import importlib.metadata
+import importlib.util
+import json
+import platform
+from pathlib import Path
+versions = {}
+for name in ['vllm', 'vllm-ascend', 'torch', 'torch-npu', 'transformers']:
+    try:
+        versions[name] = importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError:
+        versions[name] = 'MISSING'
+spec = importlib.util.find_spec('vllm')
+registry_found = False
+if spec and spec.submodule_search_locations:
+    registry = Path(next(iter(spec.submodule_search_locations))) / 'model_executor/models/registry.py'
+    registry_found = registry.is_file() and 'Qwen3_5ForConditionalGeneration' in registry.read_text()
+facts = {'architecture': platform.machine(), 'versions': versions,
+         'qwen_architecture_in_registry': registry_found}
+print(json.dumps(facts, indent=2))
+if platform.machine() not in ['aarch64', 'arm64'] or 'MISSING' in versions.values() or not registry_found:
+    raise SystemExit('Image metadata inspection failed')
+</code></pre>
+<h3 id="startupstart.sh">startup/start.sh</h3>
+<pre><code class="language-bash">#!/usr/bin/env bash
+set -euo pipefail
+for f in /usr/local/Ascend/ascend-toolkit/set_env.sh /usr/local/Ascend/nnal/atb/set_env.sh; do
+  if [[ -f &quot;$f&quot; ]]; then set +u; source &quot;$f&quot;; set -u; fi
+done
+export PYTHONUNBUFFERED=1
+export HCCL_BUFFSIZE=512
+export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True
+export OMP_NUM_THREADS=8
+export TOKENIZERS_PARALLELISM=false
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+export OTEL_SDK_DISABLED=true
+exec python /qwen-data/startup/supervisor.py
+</code></pre>
+<h3 id="startupsupervisor.py">startup/supervisor.py</h3>
+<pre><code class="language-python">&quot;&quot;&quot;ModelArts-native vLLM process and stdout/file log supervisor.&quot;&quot;&quot;
+import datetime
+import importlib.metadata
+import json
+import os
+from pathlib import Path
+import signal
+import subprocess
+import sys
+from thread_preflight import ensure_threads
+
+ROOT = Path('/qwen-data')
+HOST = os.uname().nodename
+RUN = ROOT / 'run' / HOST
+RUN.mkdir(parents=True, exist_ok=True)
+verified = json.loads((ROOT / 'weights-verified.json').read_text())
+if not verified.get('complete') or verified['revision'] != '6a9e13bd6fc8f0983b9b99948120bc37f49c13e9':
+    raise RuntimeError('Pinned snapshot verification receipt is missing or invalid')
+for item in verified['files']:
+    path = Path('/model/weights') / item['file']
+    if not path.is_file() or path.stat().st_size != item['bytes']:
+        raise RuntimeError(f'Cached weight inventory mismatch: {path}')
+stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+log = (ROOT / 'logs' / f'runtime-{stamp}-{HOST}.log').open('a', buffering=1)
+def emit(line):
+    print(line, end='', flush=True)
+    log.write(line)
+    log.flush()
+args = [sys.executable, '-m', 'vllm.entrypoints.openai.api_server',
+        '--model', '/model/weights', '--served-model-name', 'qwen3.6-27b',
+        '--host', '0.0.0.0', '--port', '8000', '--tensor-parallel-size', '8',
+        '--data-parallel-size', '1', '--dtype', 'bfloat16', '--max-model-len', '262144',
+        '--max-num-seqs', '16', '--max-num-batched-tokens', '8192',
+        '--gpu-memory-utilization', '0.90', '--no-enable-prefix-caching',
+        '--reasoning-parser', 'qwen3', '--seed', '1024',
+        '--compilation-config', '{&quot;cudagraph_mode&quot;:&quot;FULL_DECODE_ONLY&quot;}']
+versions = {}
+for name in ['vllm', 'vllm-ascend', 'torch', 'torch-npu', 'transformers']:
+    try:
+        versions[name] = importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError:
+        versions[name] = 'missing'
+facts = {'started_utc': stamp, 'args': args, 'versions': versions, 'hostname': HOST,
+         'pod_ip': os.environ.get('POD_IP'), 'required_context': 262144,
+         'required_npus': 8, 'quantization': None, 'mtp': False,
+         'thread_preflight': ensure_threads()}
+(RUN / f'launch-{stamp}.json').write_text(json.dumps(facts, indent=2))
+emit(json.dumps(facts) + '\n')
+(RUN / 'supervisor.pid').write_text(str(os.getpid()))
+subprocess.run(['npu-smi', 'info'], stdout=log, stderr=log, check=False)
+child = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         text=True, bufsize=1, start_new_session=True)
+(RUN / 'engine-parent.pid').write_text(str(child.pid))
+def forward(signum, frame):
+    emit(f'SHUTDOWN forwarding signal {signum} to API server {child.pid}\n')
+    try:
+        child.send_signal(signum)
+    except ProcessLookupError:
+        pass
+signal.signal(signal.SIGTERM, forward)
+signal.signal(signal.SIGINT, forward)
+for line in child.stdout:
+    emit(line)
+code = child.wait()
+emit(f'ENGINE_EXIT {code}\n')
+sys.exit(code)
+</code></pre>
+<h3 id="startupthread_preflight.py">startup/thread_preflight.py</h3>
+<pre><code class="language-python">&quot;&quot;&quot;Probe thread creation; add an errno-only clone3 deny rule if required.
+
+Existing seccomp rules remain active. The denied syscall remains denied.
+No compatibility filter is applied when threads already work.
+&quot;&quot;&quot;
+import ctypes, errno, platform, threading
+
+def probe():
+    worker=threading.Thread(target=lambda:None)
+    worker.start()
+    worker.join(5)
+    assert not worker.is_alive(), 'thread probe did not complete'
+
+def ensure_threads():
+    try:
+        probe()
+        return {'thread_probe':'passed','compatibility_filter_applied':False}
+    except RuntimeError:
+        if platform.machine() not in ('aarch64','arm64'):raise
+    libc=ctypes.CDLL(None,use_errno=True)
+    libc.syscall.restype=ctypes.c_long
+    libc.prctl.restype=ctypes.c_int
+    libc.prctl.argtypes=[ctypes.c_int]+[ctypes.c_ulong]*4
+    ctypes.set_errno(0)
+    result=libc.syscall(ctypes.c_long(435),ctypes.c_void_p(0),ctypes.c_size_t(88))
+    before=ctypes.get_errno()
+    if (result,before)!=(-1,errno.EPERM):
+        raise RuntimeError(f'Thread failure is not verified clone3 EPERM: {result}/{before}')
+    class Filter(ctypes.Structure):
+        _fields_=[('code',ctypes.c_ushort),('jt',ctypes.c_ubyte),('jf',ctypes.c_ubyte),('k',ctypes.c_uint)]
+    class Program(ctypes.Structure):
+        _fields_=[('len',ctypes.c_ushort),('filter',ctypes.POINTER(Filter))]
+    rules=(Filter*6)(Filter(0x20,0,0,4),Filter(0x15,0,3,0xC00000B7),Filter(0x20,0,0,0),Filter(0x15,0,1,435),Filter(0x06,0,0,0x00050000|errno.ENOSYS),Filter(0x06,0,0,0x7FFF0000))
+    program=Program(len(rules),rules)
+    assert libc.prctl(38,1,0,0,0)==0,'no_new_privs failed'
+    assert libc.prctl(22,2,ctypes.addressof(program),0,0)==0,'additive deny filter failed'
+    ctypes.set_errno(0)
+    result=libc.syscall(ctypes.c_long(435),ctypes.c_void_p(0),ctypes.c_size_t(88))
+    after=ctypes.get_errno()
+    assert (result,after)==(-1,errno.ENOSYS)
+    probe()
+    return {'thread_probe':'passed','compatibility_filter_applied':True,'clone3_errno_before':before,'clone3_errno_after':after,'inherited_seccomp':'preserved','clone3':'still denied'}
+</code></pre>
+<h3 id="startupstop.sh">startup/stop.sh</h3>
+<pre><code class="language-bash">#!/usr/bin/env bash
+set -euo pipefail
+pidfile=&quot;/qwen-data/run/$(hostname)/supervisor.pid&quot;
+if [[ ! -f &quot;$pidfile&quot; ]]; then exit 0; fi
+pid=$(cat &quot;$pidfile&quot;)
+if ! [[ &quot;$pid&quot; =~ ^[0-9]+$ ]]; then echo 'Invalid supervisor PID' &gt;&amp;2; exit 1; fi
+if ! kill -0 &quot;$pid&quot; 2&gt;/dev/null; then exit 0; fi
+if ! tr '\0' ' ' &lt; &quot;/proc/$pid/cmdline&quot; | grep -Fq '/qwen-data/startup/supervisor.py'; then
+  echo 'PID does not refer to this deployment supervisor; stop hook refused' &gt;&amp;2
+  exit 1
+fi
+kill -TERM &quot;$pid&quot;
+while kill -0 &quot;$pid&quot; 2&gt;/dev/null; do sleep 1; done
+</code></pre>
+<h3 id="scriptsacceptance.py">scripts/acceptance.py</h3>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;Functional chatbot smoke checks; no performance or quality benchmark.&quot;&quot;&quot;
+import argparse
+import datetime
+import json
+import os
+from pathlib import Path
+import time
+import requests
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--service-root', required=True)
+    parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--long', action='store_true')
+    parser.add_argument('--ca-bundle', type=Path)
+    parser.add_argument('--local-container', action='store_true', help='Use only for an authorized container-local route; skips gateway authentication checks')
+    args = parser.parse_args()
+    base = args.service_root.rstrip('/')
+    if 'CHANGE_ME' in base or not base.startswith(('https://', 'http://')) or base.endswith('/v1'):
+        parser.error('Provide the actual invocation prefix, before custom /v1 paths')
+    if not args.local_container and not base.startswith('https://'):
+        parser.error('Use the HTTPS ModelArts invocation route; HTTP is permitted only for an authorized container-local test')
+    key = os.environ.get('QWEN_MODELARTS_API_KEY')
+    if not args.local_container and not key:
+        parser.error('Set QWEN_MODELARTS_API_KEY without placing it in a command argument')
+    if args.ca_bundle and not args.ca_bundle.is_file():
+        parser.error('CA bundle does not exist')
+    out = args.output.resolve()
+    out.mkdir(parents=True, exist_ok=False)
+    session = requests.Session()
+    session.verify = str(args.ca_bundle) if args.ca_bundle else True
+    if key:
+        session.headers['Authorization'] = 'Bearer ' + key
+    model = 'qwen3.6-27b'
+    results = []
+
+    def save(name, data):
+        (out / name).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+
+    def post(path, body, timeout=1200):
+        start = time.monotonic()
+        response = session.post(base + path, json=body, timeout=timeout)
+        response.raise_for_status()
+        return response.json(), time.monotonic() - start
+
+    assert session.get(base + '/health', timeout=20).status_code == 200
+    response = session.get(base + '/v1/models', timeout=20)
+    response.raise_for_status()
+    models = response.json()
+    save('models.json', models)
+    entry = next(x for x in models['data'] if x['id'] == model)
+    if entry.get('max_model_len') is not None:
+        assert entry['max_model_len'] == 262144, entry
+    results.append({'case': 'model_listing', 'passed': True, 'reported_context': entry.get('max_model_len')})
+    cases = [
+        ('basic', [{'role': 'user', 'content': 'Return only the integer result of 19 + 24.'}], '43'),
+        ('unicode', [{'role': 'user', 'content': 'Copy exactly this text without quotes or commentary: Olá, Brasil! 你好！'}], 'Olá, Brasil! 你好！'),
+        ('multiturn', [{'role': 'system', 'content': 'You are a helpful chatbot. Answer concisely.'},
+                       {'role': 'user', 'content': 'My favorite color is turquoise.'},
+                       {'role': 'assistant', 'content': 'I will remember turquoise.'},
+                       {'role': 'user', 'content': 'What is my favorite color? Return only its name.'}], 'turquoise')
+    ]
+    for name, messages, expected in cases:
+        data, elapsed = post('/v1/chat/completions', {'model': model, 'messages': messages,
+                              'max_tokens': 256, 'temperature': 0, 'chat_template_kwargs': {'enable_thinking': False}})
+        save(name + '.json', data)
+        answer = data['choices'][0]['message']['content'].strip()
+        assert answer.strip('&quot;').lower() == expected.lower(), (name, answer)
+        assert data['choices'][0]['finish_reason'] == 'stop'
+        results.append({'case': name, 'passed': True, 'seconds': elapsed, 'usage': data.get('usage')})
+
+    body = {'model': model, 'messages': [{'role': 'user', 'content': 'Return exactly this JSON with no formatting: {&quot;answer&quot;:43,&quot;text&quot;:&quot;Olá 你好&quot;}'}],
+            'max_tokens': 256, 'temperature': 0, 'stream': True, 'stream_options': {'include_usage': True},
+            'chat_template_kwargs': {'enable_thinking': False}}
+    start = time.monotonic()
+    with session.post(base + '/v1/chat/completions', json=body, stream=True, timeout=1200) as response:
+        response.raise_for_status()
+        answer, done, events = '', False, []
+        for line in response.iter_lines():
+            if not line.startswith(b'data: '):
+                continue
+            payload = line[6:].decode('utf-8')
+            if payload == '[DONE]':
+                done = True
+                break
+            event = json.loads(payload)
+            events.append(event)
+            for choice in event.get('choices', []):
+                answer += choice.get('delta', {}).get('content') or ''
+    save('stream.json', {'events': events, 'done': done, 'content': answer})
+    assert done and json.loads(answer) == {'answer': 43, 'text': 'Olá 你好'}
+    results.append({'case': 'stream_unicode_json', 'passed': True, 'seconds': time.monotonic() - start})
+
+    data, elapsed = post('/v1/chat/completions', {'model': model,
+                        'messages': [{'role': 'user', 'content': 'What is 7 plus 8? Give only the final integer.'}],
+                        'max_tokens': 512, 'temperature': 0})
+    save('default-thinking.json', data)
+    message = data['choices'][0]['message']
+    assert message['content'].strip() == '15'
+    assert message.get('reasoning') or message.get('reasoning_content'), 'Default reasoning field is empty'
+    assert data['choices'][0]['finish_reason'] == 'stop'
+    results.append({'case': 'default_thinking', 'passed': True, 'seconds': elapsed, 'usage': data.get('usage')})
+
+    if args.long:
+        def messages(n):
+            return [{'role': 'user', 'content': 'Read this filler document.\n' + (' neutral text.' * n) +
+                     '\nThe secret marker is QWEN256KOK. Return only the secret marker.'}]
+        n = 85000
+        for attempt in range(5):
+            tokens, _ = post('/tokenize', {'model': model, 'messages': messages(n),
+                             'add_generation_prompt': True, 'chat_template_kwargs': {'enable_thinking': False}})
+            count = tokens['count']
+            save(f'long-token-count-{attempt}.json', {'repetitions': n, 'count': count})
+            if 261000 &lt;= count &lt;= 262016:
+                break
+            n = int(n * (261800 / max(count, 1)))
+        assert 261000 &lt;= count &lt;= 262016, count
+        data, elapsed = post('/v1/chat/completions', {'model': model, 'messages': messages(n),
+                             'max_tokens': 128, 'temperature': 0, 'chat_template_kwargs': {'enable_thinking': False}})
+        save('long-context.json', data)
+        assert data['choices'][0]['message']['content'].strip() == 'QWEN256KOK'
+        assert data['choices'][0]['finish_reason'] == 'stop'
+        assert data['usage']['prompt_tokens'] &gt;= 261000
+        results.append({'case': 'near_262144_context', 'passed': True, 'seconds': elapsed, 'usage': data['usage']})
+        rejected = session.post(base + '/v1/chat/completions', json={'model': model, 'messages': messages(n + 1000),
+                                'max_tokens': 128, 'chat_template_kwargs': {'enable_thinking': False}}, timeout=120)
+        save('over-context.json', {'http': rejected.status_code, 'response': rejected.json()})
+        assert rejected.status_code == 400
+        results.append({'case': 'over_context_rejected', 'passed': True})
+
+    if not args.local_container:
+        unauthenticated = requests.Session()
+        unauthenticated.verify = session.verify
+        rejected = unauthenticated.post(base + '/v1/chat/completions', json={'model': model,
+                                         'messages': [{'role': 'user', 'content': 'Hi'}], 'max_tokens': 4}, timeout=20)
+        save('authentication-negative.json', {'status': rejected.status_code, 'body': rejected.text[:1000]})
+        assert rejected.status_code in (401, 403)
+        results.append({'case': 'missing_key_rejected', 'passed': True})
+    assert session.get(base + '/health', timeout=20).status_code == 200
+    save('summary.json', {'passed': True, 'at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                         'service_root': base, 'results': results, 'performance_claim': False,
+                         'gateway_authentication_checked': not args.local_container})
+    print(json.dumps({'passed': True, 'results': results}, ensure_ascii=False), flush=True)
+
+if __name__ == '__main__':
+    main()
+</code></pre>
+<footer>Use the accompanying scripts and final checklist. This document is a deployment procedure; public-cloud runtime acceptance must be performed in the target region. Print this page using your browser print command.</footer></main></div></body></html>

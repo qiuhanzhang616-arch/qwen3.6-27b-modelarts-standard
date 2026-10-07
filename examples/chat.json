@@ -1,0 +1,7 @@
+{
+  "model": "qwen3.6-27b",
+  "messages": [{"role": "user", "content": "Return only the integer result of 19 + 24."}],
+  "max_tokens": 256,
+  "temperature": 0,
+  "chat_template_kwargs": {"enable_thinking": false}
+}

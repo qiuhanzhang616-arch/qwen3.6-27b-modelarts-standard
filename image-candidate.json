@@ -1,0 +1,14 @@
+{
+  "checked_date": "2026-10-07",
+  "public_source": "quay.io/ascend/vllm-ascend:v0.23.0.post1",
+  "multiarchitecture_index_digest": "sha256:ffe9306186781ddb80812eda574134e601ee8499693ea36e4a97173111ddf7e7",
+  "arm64_image": "quay.io/ascend/vllm-ascend@sha256:e62e85cb1bef9625cf568d0e8e2ac8e4b76f946eb6e8d9d459cfcf99565bea5d",
+  "architecture": "arm64",
+  "os": "linux",
+  "compressed_layers_bytes": 6698551583,
+  "cann_path_in_image_metadata": "/usr/local/Ascend/cann-9.1.0",
+  "verification_scope": "Anonymous public registry index, ARM64 manifest and config metadata verified; this candidate was not used in the reference runtime acceptance",
+  "reference_runtime_manifest_digest": "sha256:26e8a40f1b7a4ed6b7242578aac79f07d6525ffad1427fa4ebd7e3ed166a6bcb",
+  "reference_public_registry_availability": "Anonymous Quay lookup returned MANIFEST_UNKNOWN on 2026-10-07; retrieve the retained validated image from its owner or use the public candidate and validate it on the target pool",
+  "operator_gate": "Confirm target pool driver compatibility and execute all acceptance tests with the exact selected image"
+}

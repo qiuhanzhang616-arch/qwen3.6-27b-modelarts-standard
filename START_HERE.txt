@@ -1,0 +1,35 @@
+Qwen3.6 27B on Huawei Cloud ModelArts Standard
+
+Read DEPLOYMENT_GUIDE_EN.md or DEPLOYMENT_GUIDE_EN.html.
+Follow the steps in order and complete FINAL_CHECKLIST.md.
+
+Package contents
+- English guide with 17 deployment steps, full console option checklist,
+  29 direct fixed-revision download URLs, and 7 complete script listings.
+- Pinned official-weight downloader with SHA256 verification and resume support.
+- ModelArts-native startup supervisor, conditional thread preflight and stop hook.
+- Public-image metadata inspection helper and recorded ARM64 candidate digest.
+- Authenticated chat, streaming, thinking and optional 256K acceptance checks.
+- Sample request bodies and handover checklist.
+- WEIGHT_DOWNLOAD_URLS.txt with every direct snapshot URL as plain text.
+
+The package does not include model weights, a container image or credentials.
+The exact reference runtime and selected public release image are different.
+Inspect compatibility and run acceptance in the actual public-cloud region.
+
+All paths beginning CHANGE_ME are placeholders.
+Do not replace them with an unrelated environment's URLs or service IDs.
+Shell commands in the guide run on Linux. Script files use UTF-8 and LF line endings.
+
+SHA256SUMS verifies the distributed package files before preparation.
+From the extracted package directory on Linux, run:
+    sha256sum -c SHA256SUMS
+
+Content and script validation
+- Python syntax checks passed.
+- Bash syntax checks passed.
+- Downloader metadata check returned the pinned 29-file, 55,586,107,940-byte snapshot.
+- Public registry ARM64 manifest/config were reachable when checked.
+- HTML was checked structurally; browser rendering was not verified because the
+  agent's browser policy blocks local-file URLs.
+- No target public-cloud resources were created by preparing this document.
